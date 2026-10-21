@@ -4,6 +4,7 @@ import { sound } from '../services/sound'
 import { speech } from '../services/speech'
 import { SpeakerButton } from '../components/SpeakerButton'
 import { SuccessCelebration } from '../components/SuccessCelebration'
+import { pickRandom, FACES_AND_NAMES_VOICES } from '../services/voiceFeedback'
 
 interface Props {
   onComplete: () => void
@@ -318,7 +319,8 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
     clearAllTimeouts()
     setPhase('recall')
     setVisibleIndices([])
-    speech.speak(`¿Quién es ${targetPerson.name}? Toca su cara.`)
+    const guessingVoice = pickRandom(FACES_AND_NAMES_VOICES.guessing)(targetPerson.name)
+    speech.speak(guessingVoice)
 
     // Staggered reveal in randomized order so they don't appear in predictable top-to-bottom sequence
     const delayBetween = choicesList.length === 4 ? 200 : choicesList.length === 6 ? 180 : 150
@@ -375,18 +377,20 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
     setFeedback('')
     isAdvancingRef.current = false
 
-    // Initial voice prompt
+    // Initial varied voice prompt
     addTimeout(() => {
-      speech.speak(`${target.name}. ¡Recuerda su cara!`)
+      const introVoice = pickRandom(FACES_AND_NAMES_VOICES.intro)(target.name)
+      speech.speak(introVoice)
     }, 150)
 
     // Visualise face for 1.5 seconds (1500ms), and afterwards flip the card
     addTimeout(() => {
       sound.playTap()
       setIsCardFlipped(true)
-      // Voice prompts user to click play when ready
+      // Varied voice prompts user to click play when ready
       addTimeout(() => {
-        speech.speak('Pulsa jugar para adivinar su cara.')
+        const playVoice = pickRandom(FACES_AND_NAMES_VOICES.playPrompt)
+        speech.speak(playVoice)
       }, 700)
     }, 1650) // 150ms mount buffer + 1500ms viewing = 1650ms
 
@@ -426,7 +430,8 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
     setPhase('memorize')
 
     addTimeout(() => {
-      speech.speak(`${currentTarget.name}. ¡Recuerda su cara!`)
+      const introVoice = pickRandom(FACES_AND_NAMES_VOICES.intro)(currentTarget.name)
+      speech.speak(introVoice)
     }, 100)
 
     // Show for 1.5s, then flip again and wait for play button
@@ -434,7 +439,8 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
       sound.playTap()
       setIsCardFlipped(true)
       addTimeout(() => {
-        speech.speak('Pulsa jugar para buscar su cara.')
+        const playVoice = pickRandom(FACES_AND_NAMES_VOICES.playPrompt)
+        speech.speak(playVoice)
       }, 700)
     }, 1600)
   }
@@ -446,7 +452,7 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
     if (person.id === currentTarget.id) {
       isAdvancingRef.current = true
       sound.playSuccess()
-      const praise = `¡Exacto! Esa cara es de ${currentTarget.name}.`
+      const praise = pickRandom(FACES_AND_NAMES_VOICES.correct)(currentTarget.name)
       setFeedback(praise)
 
       let hasAdv = false
@@ -467,8 +473,9 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
       setTimeout(advance, 6000)
     } else {
       sound.playGentleRetry()
-      setFeedback(`Esa persona es ${person.name}. Busca la cara de ${currentTarget.name}.`)
-      speech.speak(`Esa persona es ${person.name}. Busca a ${currentTarget.name}.`)
+      const retryVoice = pickRandom(FACES_AND_NAMES_VOICES.wrong)(person.name, currentTarget.name)
+      setFeedback(retryVoice)
+      speech.speak(retryVoice)
     }
   }
 

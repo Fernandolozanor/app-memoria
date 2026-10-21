@@ -3,6 +3,7 @@ import { sound } from '../services/sound'
 import { speech } from '../services/speech'
 import { SpeakerButton } from '../components/SpeakerButton'
 import { SuccessCelebration } from '../components/SuccessCelebration'
+import { pickRandom, MEMORY_PAIRS_VOICES } from '../services/voiceFeedback'
 
 interface Props {
   onComplete: () => void
@@ -52,7 +53,8 @@ export function MemoryPairs({ onComplete, onExit }: Props) {
     setIsLocked(false)
     setIsSuccess(false)
 
-    speech.speak('Toca dos cartas para descubrir los dibujos y buscar las parejas iguales.')
+    const introVoice = pickRandom(MEMORY_PAIRS_VOICES.intro)
+    speech.speak(introVoice)
   }
 
   useEffect(() => {
@@ -82,7 +84,9 @@ export function MemoryPairs({ onComplete, onExit }: Props) {
           setIsLocked(false)
 
           const isComplete = newMatched.length === cards.length / 2
-          const praise = `¡Pareja de ${firstCard.name}!`
+          const praise = isComplete
+            ? pickRandom(MEMORY_PAIRS_VOICES.allCompleted)
+            : pickRandom(MEMORY_PAIRS_VOICES.pairFound)(firstCard.name)
 
           if (isComplete) {
             let hasAdv = false
@@ -102,6 +106,7 @@ export function MemoryPairs({ onComplete, onExit }: Props) {
         }, 500)
       } else {
         setTimeout(() => {
+          sound.playGentleRetry()
           setFlippedIndices([])
           setIsLocked(false)
         }, 1300)

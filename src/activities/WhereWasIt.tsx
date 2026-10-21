@@ -4,6 +4,7 @@ import { sound } from '../services/sound'
 import { speech } from '../services/speech'
 import { SpeakerButton } from '../components/SpeakerButton'
 import { SuccessCelebration } from '../components/SuccessCelebration'
+import { pickRandom, WHERE_WAS_IT_VOICES } from '../services/voiceFeedback'
 
 interface Props {
   onComplete: () => void
@@ -134,9 +135,8 @@ export function WhereWasIt({ onComplete, onExit }: Props) {
 
     const item = sessionItems[rIdx] || sessionItems[0]
     addTimeout(() => {
-      speech.speak(
-        `Fíjate bien. En esta mesa hay ${total} tarjetas. Voltearemos ${count} y en una esconderemos ${item.name}. Pulsa el botón cuando estés listo.`
-      )
+      const introVoice = pickRandom(WHERE_WAS_IT_VOICES.intro)(total, count, item.name)
+      speech.speak(introVoice)
     }, 250)
   }
 
@@ -183,14 +183,13 @@ export function WhereWasIt({ onComplete, onExit }: Props) {
         transitioned = true
         setVisibleRevealedSlots([])
         setPhase('guessing')
-        speech.speak(`¿Dónde ${estaba} ${currentItem.name}? Toca la tarjeta.`)
+        const guessingPrompt = pickRandom(WHERE_WAS_IT_VOICES.guessing)(estaba, currentItem.name)
+        speech.speak(guessingPrompt)
       }
 
-      // Voice speaks the explanation
-      speech.speak(
-        `Aquí ${esta} ${currentItem.name}. Recuerda bien su posición.`,
-        transitionToGuessing
-      )
+      // Voice speaks the explanation with varied phrasing
+      const explanationVoice = pickRandom(WHERE_WAS_IT_VOICES.showing)(esta, currentItem.name)
+      speech.speak(explanationVoice, transitionToGuessing)
 
       // Fallback timer in case speech synthesis callback does not fire
       addTimeout(transitionToGuessing, 4500)
@@ -217,7 +216,7 @@ export function WhereWasIt({ onComplete, onExit }: Props) {
     if (slotIdx === targetSlot) {
       isAdvancingRef.current = true
       sound.playSuccess()
-      const praise = `¡Exacto! Ahí ${estaba} ${currentItem.name}.`
+      const praise = pickRandom(WHERE_WAS_IT_VOICES.correct)(estaba, currentItem.name)
       setFeedback(praise)
 
       let hasAdv = false
@@ -238,7 +237,7 @@ export function WhereWasIt({ onComplete, onExit }: Props) {
       setTimeout(advance, 6000)
     } else {
       sound.playGentleRetry()
-      const retryMsg = `Ahí no ${estaba}. Toca otra tarjeta.`
+      const retryMsg = pickRandom(WHERE_WAS_IT_VOICES.wrong)(estaba)
       setFeedback(retryMsg)
       speech.speak(retryMsg)
     }

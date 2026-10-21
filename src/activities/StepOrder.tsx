@@ -3,6 +3,7 @@ import { sound } from '../services/sound'
 import { speech } from '../services/speech'
 import { SpeakerButton } from '../components/SpeakerButton'
 import { SuccessCelebration } from '../components/SuccessCelebration'
+import { pickRandom, STEP_ORDER_VOICES } from '../services/voiceFeedback'
 
 interface Props {
   onComplete: () => void
@@ -542,7 +543,8 @@ export function StepOrder({ onComplete, onExit }: Props) {
     setIsSuccess(false)
 
     const timer = setTimeout(() => {
-      speech.speak(`${task.title}. ¿Qué hacemos primero?`)
+      const introVoice = pickRandom(STEP_ORDER_VOICES.firstStep)(task.title)
+      speech.speak(introVoice)
     }, 250)
 
     return () => {
@@ -590,18 +592,19 @@ export function StepOrder({ onComplete, onExit }: Props) {
           }, 500)
         }
 
-        speech.speak('¡Muy bien ordenado!', advance)
+        const completedVoice = pickRandom(STEP_ORDER_VOICES.completed)
+        speech.speak(completedVoice, advance)
         setTimeout(advance, 6000)
       } else {
-        const isFinal = nextTarget === currentTask.steps.length
-        const prompt = isFinal ? '¿Y qué hacemos al final?' : '¿Qué hacemos después?'
-        setFeedback(prompt)
-        speech.speak(prompt)
+        const nextPrompt = pickRandom(STEP_ORDER_VOICES.nextStep)(nextTarget)
+        setFeedback(nextPrompt)
+        speech.speak(nextPrompt)
       }
     } else {
       sound.playGentleRetry()
-      setFeedback('Ese paso va después.')
-      speech.speak('Ese paso va después. Piensa qué hacemos antes.')
+      const wrongMsg = pickRandom(STEP_ORDER_VOICES.wrong)
+      setFeedback(wrongMsg)
+      speech.speak(wrongMsg)
     }
   }
 

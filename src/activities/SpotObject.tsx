@@ -3,6 +3,7 @@ import { sound } from '../services/sound'
 import { speech } from '../services/speech'
 import { SpeakerButton } from '../components/SpeakerButton'
 import { SuccessCelebration } from '../components/SuccessCelebration'
+import { pickRandom, SPOT_OBJECT_VOICES } from '../services/voiceFeedback'
 
 interface Props {
   onComplete: () => void
@@ -115,7 +116,8 @@ export function SpotObject({ onComplete, onExit }: Props) {
 
       timerRef.current = window.setTimeout(() => {
         setPhase('guessing')
-        speech.speak('¿Dónde estaba el objeto diferente?')
+        const guessingPhrase = pickRandom(SPOT_OBJECT_VOICES.guessing)
+        speech.speak(guessingPhrase)
       }, viewDuration)
 
       return 'showing'
@@ -135,10 +137,12 @@ export function SpotObject({ onComplete, onExit }: Props) {
     setIsSuccess(false)
     isAdvancingRef.current = false
 
+    const introPhrase = pickRandom(SPOT_OBJECT_VOICES.intro)(count)
+
     // Initial 250ms buffer ensuring DOM is mounted
     timerRef.current = window.setTimeout(() => {
-      // Step 1: Voice says "Fíjate bien y busca el objeto diferente"
-      speech.speak('Fíjate bien y busca el objeto diferente.', () => {
+      // Step 1: Varied voice intro
+      speech.speak(introPhrase, () => {
         // Step 2: "espera un momento y muestra las cartas"
         timerRef.current = window.setTimeout(() => {
           revealCards(roundNum)
@@ -148,7 +152,7 @@ export function SpotObject({ onComplete, onExit }: Props) {
       // Fallback timer if speech synthesis onEnd doesn't fire
       fallbackRef.current = window.setTimeout(() => {
         revealCards(roundNum)
-      }, 3000)
+      }, 3500)
     }, 250)
   }
 
@@ -169,7 +173,7 @@ export function SpotObject({ onComplete, onExit }: Props) {
     if (idx === targetIndex) {
       isAdvancingRef.current = true
       sound.playSuccess()
-      const praise = '¡Exacto! Esa era la carta diferente.'
+      const praise = pickRandom(SPOT_OBJECT_VOICES.correct)
       setFeedback(praise)
 
       let hasAdv = false
@@ -190,8 +194,9 @@ export function SpotObject({ onComplete, onExit }: Props) {
       setTimeout(advance, 6000)
     } else {
       sound.playGentleRetry()
-      setFeedback('Esa no era. Prueba con otra carta.')
-      speech.speak('Esa no era. Prueba con otra carta.')
+      const retryPhrase = pickRandom(SPOT_OBJECT_VOICES.wrong)
+      setFeedback(retryPhrase)
+      speech.speak(retryPhrase)
     }
   }
 

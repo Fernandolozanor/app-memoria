@@ -3,6 +3,7 @@ import { sound } from '../services/sound'
 import { speech } from '../services/speech'
 import { SpeakerButton } from '../components/SpeakerButton'
 import { SuccessCelebration } from '../components/SuccessCelebration'
+import { pickRandom, ODD_ONE_OUT_VOICES } from '../services/voiceFeedback'
 
 interface Props {
   onComplete: () => void
@@ -238,7 +239,8 @@ export function OddOneOut({ onComplete, onExit }: Props) {
     isAdvancingRef.current = false
 
     const timer = setTimeout(() => {
-      speech.speak(`Toca el dibujo que no pertenece a ${currentRound.family.category}.`)
+      const introVoice = pickRandom(ODD_ONE_OUT_VOICES.intro)(currentRound.family.category)
+      speech.speak(introVoice)
     }, 250)
 
     return () => {
@@ -254,7 +256,7 @@ export function OddOneOut({ onComplete, onExit }: Props) {
     if (card.isOdd) {
       isAdvancingRef.current = true
       sound.playSuccess()
-      const praise = `¡Correcto! ${card.name} no pertenece a ${currentRound.family.category}.`
+      const praise = pickRandom(ODD_ONE_OUT_VOICES.correct)(card.name, currentRound.family.category)
       setFeedback(praise)
 
       let hasAdv = false
@@ -275,8 +277,9 @@ export function OddOneOut({ onComplete, onExit }: Props) {
       setTimeout(advance, 7000)
     } else {
       sound.playGentleRetry()
+      const wrongMsg = pickRandom(ODD_ONE_OUT_VOICES.wrong)(currentRound.family.category)
       setFeedback(`"${card.name}" sí es de ${currentRound.family.category}. Busca el que no encaja.`)
-      speech.speak(`Ese sí pertenece a la familia. Prueba con otro.`)
+      speech.speak(wrongMsg)
     }
   }
 

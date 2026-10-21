@@ -3,6 +3,7 @@ import { Volume2 } from 'lucide-react'
 import { sound } from '../services/sound'
 import { speech } from '../services/speech'
 import { SuccessCelebration } from '../components/SuccessCelebration'
+import { pickRandom, SWEET_PIANO_VOICES } from '../services/voiceFeedback'
 
 interface Props {
   onComplete: () => void
@@ -89,7 +90,8 @@ export function SweetPiano({ onComplete, onExit }: Props) {
     isInputLockedRef.current = false
     setIsPlayingSeq(false)
     setFeedback('¡Te toca!')
-    speech.speak('¡Ahora te toca a ti!')
+    const turnVoice = pickRandom(SWEET_PIANO_VOICES.turn)
+    speech.speak(turnVoice)
   }
 
   const playSequence = (seq: number[], announceRound = true) => {
@@ -203,7 +205,8 @@ export function SweetPiano({ onComplete, onExit }: Props) {
           }, 450)
         }
 
-        speech.speak('¡Muy bien!', advance)
+        const successVoice = pickRandom(SWEET_PIANO_VOICES.success)
+        speech.speak(successVoice, advance)
         roundAdvanceTimerRef.current = window.setTimeout(advance, 4000)
       }
     } else {
@@ -228,8 +231,9 @@ export function SweetPiano({ onComplete, onExit }: Props) {
         }, 350)
       }
 
-      // Speak correction softly and ONLY restart once voice finishes speaking without re-announcing round
-      speech.speak('No pasa nada. Escucha con calma la melodía.', () => {
+      // Speak varied correction softly and ONLY restart once voice finishes speaking without re-announcing round
+      const retryVoice = pickRandom(SWEET_PIANO_VOICES.gentleRetry)
+      speech.speak(retryVoice, () => {
         triggerReplay()
       })
 

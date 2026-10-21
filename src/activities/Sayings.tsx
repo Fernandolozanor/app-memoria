@@ -3,6 +3,7 @@ import { sound } from '../services/sound'
 import { speech } from '../services/speech'
 import { SpeakerButton } from '../components/SpeakerButton'
 import { SuccessCelebration } from '../components/SuccessCelebration'
+import { pickRandom, SAYINGS_VOICES } from '../services/voiceFeedback'
 
 interface Props {
   onComplete: () => void
@@ -263,9 +264,10 @@ export function Sayings({ onComplete, onExit }: Props) {
     const opts = [item.correct, wrong].sort(() => 0.5 - Math.random())
     setOptions(opts)
 
-    // Automatically speak the prompt for this saying
+    // Automatically speak the prompt for this saying with varied phrasing
     const cleanStart = item.start.replace(/\.{3}/g, '').trim()
-    speech.speak(`Completa el refrán: ${cleanStart}`)
+    const introVoice = pickRandom(SAYINGS_VOICES.intro)(cleanStart)
+    speech.speak(introVoice)
   }
 
   const initGame = () => {
@@ -327,7 +329,8 @@ export function Sayings({ onComplete, onExit }: Props) {
 
       const cleanStart = current.start.replace(/\.{3}/g, '').trim()
       const cleanCorrect = current.correct.replace(/\.{3}/g, '').trim()
-      const fullText = `¡Muy bien! ${cleanStart} ${cleanCorrect}`
+      const praiseHeader = pickRandom(SAYINGS_VOICES.correctPraise)
+      const fullText = `${praiseHeader} ${cleanStart} ${cleanCorrect}`
 
       // Wait until the voice finishes speaking before advancing
       speech.speak(fullText, () => {
@@ -340,8 +343,9 @@ export function Sayings({ onComplete, onExit }: Props) {
       }, 7000)
     } else {
       sound.playGentleRetry()
-      setFeedback('Prueba con la otra opción.')
-      speech.speak('Prueba con la otra opción.')
+      const retryVoice = pickRandom(SAYINGS_VOICES.wrong)
+      setFeedback(retryVoice)
+      speech.speak(retryVoice)
       setTimeout(() => {
         setSelectedOption(null)
       }, 1200)

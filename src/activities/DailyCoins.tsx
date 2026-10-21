@@ -4,6 +4,7 @@ import { sound } from '../services/sound'
 import { speech } from '../services/speech'
 import { SpeakerButton } from '../components/SpeakerButton'
 import { SuccessCelebration } from '../components/SuccessCelebration'
+import { pickRandom, DAILY_COINS_VOICES } from '../services/voiceFeedback'
 
 interface Props {
   onComplete: () => void
@@ -226,7 +227,7 @@ export function DailyCoins({ onComplete, onExit }: Props) {
       // Perfect match!
       isAdvancingRef.current = true
       sound.playSuccess()
-      const praise = `¡Excelente! Pago exacto de ${currentItem.priceLabel} con ${currentItem.requiredCoinCount} monedas.`
+      const praise = pickRandom(DAILY_COINS_VOICES.correct)(currentItem.priceLabel)
       setFeedback(praise)
 
       let hasAdv = false
@@ -250,13 +251,15 @@ export function DailyCoins({ onComplete, onExit }: Props) {
       setFeedback(
         `Te has pasado de importe (${formatCents(newTotal)}). Quita alguna moneda del mostrador para corregir.`
       )
-      speech.speak('Te has pasado de precio. Quita alguna moneda para corregir.')
+      const overMsg = pickRandom(DAILY_COINS_VOICES.overLimit)
+      speech.speak(overMsg)
     } else if (newSelected.length === currentItem.requiredCoinCount && newTotal !== currentItem.targetCents) {
       sound.playGentleRetry()
       setFeedback(
         `Tienes ${newSelected.length} monedas pero suman ${formatCents(newTotal)} en vez de ${currentItem.priceLabel}. Quita una para probar otra.`
       )
-      speech.speak(`Tienes ${newSelected.length} monedas pero no suman el precio exacto. Prueba otra combinación.`)
+      const wrongMsg = pickRandom(DAILY_COINS_VOICES.wrongSum)
+      speech.speak(wrongMsg)
     } else {
       const remaining = currentItem.targetCents - newTotal
       setFeedback(
@@ -277,7 +280,8 @@ export function DailyCoins({ onComplete, onExit }: Props) {
     sound.playTap()
     setSelectedCoins([])
     setFeedback('')
-    speech.speak('Monedas retiradas. Elige de nuevo entre las 10 monedas.')
+    const resetMsg = pickRandom(DAILY_COINS_VOICES.coinsReset)
+    speech.speak(resetMsg)
   }
 
   const handleRestartGame = () => {
