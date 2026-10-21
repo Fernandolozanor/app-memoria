@@ -134,25 +134,25 @@ export function WhereWasIt({ onComplete, onExit }: Props) {
       window.setTimeout(() => {
         sound.playTap()
         setVisibleRevealedSlots((prev) => (prev.includes(slotIdx) ? prev : [...prev, slotIdx]))
-      }, (i + 1) * 240)
+      }, (i + 1) * 120)
     })
 
-    const totalStaggerTime = (revealOrder.length + 1) * 240
+    const totalStaggerTime = (revealOrder.length + 1) * 120
 
     staggerTimerRef.current = window.setTimeout(() => {
       let hasShown = false
       const transitionToGuessing = () => {
         if (hasShown) return
         hasShown = true
-        // Keep flipped cards visible for a calm 2.0s so senior can clearly register the location
+        // Keep flipped cards visible: reduced to half (1.0s)
         timerRef.current = window.setTimeout(() => {
           setPhase('guessing')
           speech.speak(`¿Dónde estaban ${currentItem.name}? Toca la tarjeta.`)
-        }, 2000)
+        }, 1000)
       }
 
       speech.speak(`Aquí están ${currentItem.name}. Recuerda bien su posición.`, transitionToGuessing)
-      timerRef.current = window.setTimeout(transitionToGuessing, 6000)
+      timerRef.current = window.setTimeout(transitionToGuessing, 4000)
     }, totalStaggerTime)
   }
 

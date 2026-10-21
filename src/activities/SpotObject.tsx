@@ -110,8 +110,8 @@ export function SpotObject({ onComplete, onExit }: Props) {
     setPhase((currentPhase) => {
       if (currentPhase !== 'ready') return currentPhase
 
-      // Generously scale viewing duration: 2.0s for 6 cards, 2.6s for 9 cards, 3.2s for 12 cards
-      const viewDuration = roundNum === 0 ? 2000 : roundNum === 1 ? 2600 : 3200
+      // Viewing duration reduced to half: 1.0s for 6 cards, 1.3s for 9 cards, 1.6s for 12 cards
+      const viewDuration = roundNum === 0 ? 1000 : roundNum === 1 ? 1300 : 1600
 
       timerRef.current = window.setTimeout(() => {
         setPhase('guessing')
@@ -139,16 +139,16 @@ export function SpotObject({ onComplete, onExit }: Props) {
     timerRef.current = window.setTimeout(() => {
       // Step 1: Voice says "Fíjate bien y busca el objeto diferente"
       speech.speak('Fíjate bien y busca el objeto diferente.', () => {
-        // Step 2: "espera un momento y muestra las cartas" (600ms pause)
+        // Step 2: "espera un momento y muestra las cartas"
         timerRef.current = window.setTimeout(() => {
           revealCards(roundNum)
-        }, 600)
+        }, 300)
       })
 
       // Fallback timer if speech synthesis onEnd doesn't fire
       fallbackRef.current = window.setTimeout(() => {
         revealCards(roundNum)
-      }, 3400)
+      }, 3000)
     }, 250)
   }
 
