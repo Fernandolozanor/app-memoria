@@ -386,7 +386,7 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
       setIsCardFlipped(true)
       // Voice prompts user to click play when ready
       addTimeout(() => {
-        speech.speak('Tarjeta volteada. Pulsa jugar para adivinar su cara.')
+        speech.speak('Pulsa jugar para adivinar su cara.')
       }, 700)
     }, 1650) // 150ms mount buffer + 1500ms viewing = 1650ms
 
@@ -492,7 +492,7 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
           text={
             phase === 'memorize'
               ? isCardFlipped
-                ? `La tarjeta ya está volteada. Pulsa el botón verde de jugar para adivinar la cara de ${currentTarget.name}.`
+                ? `Pulsa el botón de jugar para adivinar la cara de ${currentTarget.name}.`
                 : `${pronoun} ${currentTarget.name}. ${currentTarget.hobby}.`
               : `¿Quién es ${currentTarget.name}? Toca su cara entre las ${choiceCount} opciones.`
           }
