@@ -81,9 +81,9 @@ export function App() {
       <main className="flex-1 flex flex-col min-h-0 max-w-4xl mx-auto w-full px-2 sm:px-6 py-1 sm:py-4 overflow-hidden sm:overflow-y-auto">
         {!currentActivity ? (
           /* Catalog View - Super Clean, 100% full screen on mobile without scroll */
-          <div className="flex-1 flex flex-col min-h-0 justify-between gap-1 sm:gap-4 overflow-hidden">
+          <div className="flex-1 flex flex-col min-h-0 gap-1.5 sm:gap-3 overflow-hidden">
             {/* Direct Greeting Banner */}
-            <div className="bg-gradient-to-r from-amber-100 via-orange-50 to-emerald-50 rounded-xl sm:rounded-3xl p-1.5 sm:p-5 border-2 sm:border-3 border-amber-300 shadow-xs sm:shadow-md flex items-center justify-between gap-2 shrink-0">
+            <div className="bg-gradient-to-r from-amber-100 via-orange-50 to-emerald-50 rounded-xl sm:rounded-3xl p-1.5 sm:p-4 border-2 sm:border-3 border-amber-300 shadow-xs sm:shadow-md flex items-center justify-between gap-2 shrink-0">
               <div>
                 <h2 className="text-base sm:text-3xl md:text-4xl font-black text-stone-950 leading-tight">
                   ¿A qué jugamos hoy? 🌸
@@ -111,7 +111,7 @@ export function App() {
                       sound.playTap()
                       setSelectedCategory(cat)
                     }}
-                    className={`flex-1 flex items-center justify-center py-1 sm:py-3.5 px-0.5 sm:px-2 rounded-lg sm:rounded-2xl font-black text-xs sm:text-xl border-2 sm:border-3 transition-all cursor-pointer min-h-[34px] sm:min-h-[54px] text-center ${
+                    className={`flex-1 flex items-center justify-center py-1 sm:py-3 px-0.5 sm:px-2 rounded-lg sm:rounded-2xl font-black text-xs sm:text-xl border-2 sm:border-3 transition-all cursor-pointer min-h-[32px] sm:min-h-[50px] text-center ${
                       isSelected
                         ? 'bg-emerald-700 text-white border-emerald-900 shadow-xs sm:shadow-md ring-2 sm:ring-4 ring-emerald-300/70'
                         : 'bg-white text-stone-800 border-stone-300 hover:bg-stone-50 hover:border-stone-400'
@@ -123,8 +123,20 @@ export function App() {
               })}
             </div>
 
-            {/* Activities Grid - 2 columns, fills available screen space without scrolling */}
-            <div className="grid grid-cols-2 gap-1 sm:gap-4 flex-1 min-h-0 content-between">
+            {/* Activities Grid - 2 columns, fills available screen space, stretching cards to occupy the vertical space */}
+            <div
+              className={`grid grid-cols-2 ${
+                filteredActivities.length >= 9
+                  ? 'grid-rows-5'
+                  : filteredActivities.length >= 7
+                  ? 'grid-rows-4'
+                  : filteredActivities.length >= 5
+                  ? 'grid-rows-3'
+                  : filteredActivities.length >= 3
+                  ? 'grid-rows-2'
+                  : 'grid-rows-1'
+              } gap-1.5 sm:gap-3 flex-1 min-h-0 w-full`}
+            >
               {filteredActivities.map((activity) => (
                 <ActivityCard
                   key={activity.id}
