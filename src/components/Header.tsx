@@ -40,7 +40,7 @@ export function Header({
               {onReadHeader && (
                 <button
                   onClick={onReadHeader}
-                  className="p-1 sm:p-2 text-emerald-800 hover:bg-emerald-100 rounded-full transition-colors cursor-pointer shrink-0"
+                  className="p-1 sm:p-2 text-blue-700 hover:bg-blue-100 rounded-full transition-colors cursor-pointer shrink-0"
                   title="Escuchar título"
                   aria-label="Escuchar título"
                 >
@@ -61,11 +61,11 @@ export function Header({
           {onOpenVoiceModal && (
             <button
               onClick={onOpenVoiceModal}
-              className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-2 bg-stone-100 hover:bg-stone-200 text-stone-800 rounded-xl sm:rounded-2xl font-bold text-xs sm:text-base border-2 border-stone-300 transition-all active:scale-95 cursor-pointer shadow-xs shrink-0"
+              className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-2 bg-blue-50 hover:bg-blue-100 text-blue-900 rounded-xl sm:rounded-2xl font-bold text-xs sm:text-base border-2 border-blue-200 hover:border-blue-300 transition-all active:scale-95 cursor-pointer shadow-xs shrink-0"
               title="Elegir voz de la narradora"
               aria-label="Elegir voz de la narradora"
             >
-              <Volume2 className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-emerald-700 stroke-[2.5]" />
+              <Volume2 className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-blue-700 stroke-[2.5]" />
               <span>Voz</span>
             </button>
           )}

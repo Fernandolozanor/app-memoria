@@ -83,11 +83,11 @@ export function ActivityCard({ activity, onSelect }: Props) {
       {/* Speaker icon button */}
       <button
         onClick={handleSpeech}
-        className="p-1 sm:p-2 bg-stone-100 hover:bg-stone-200 text-stone-800 rounded-lg sm:rounded-2xl transition-colors cursor-pointer shrink-0 border border-stone-300 sm:border-2 active:scale-90"
+        className="p-1 sm:p-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg sm:rounded-2xl transition-all cursor-pointer shrink-0 border border-blue-200 sm:border-2 border-blue-300 shadow-xs active:scale-90"
         title="Escuchar nombre"
         aria-label={`Escuchar ${activity.title}`}
       >
-        <Volume2 className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-emerald-800 stroke-[2.5]" />
+        <Volume2 className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-blue-700 stroke-[2.5]" />
       </button>
     </div>
   )

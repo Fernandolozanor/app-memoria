@@ -263,9 +263,11 @@ export function SweetPiano({ onComplete, onExit }: Props) {
         <button
           onClick={handleRepeat}
           disabled={isPlayingSeq}
-          className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-1.5 sm:py-3 bg-violet-100 hover:bg-violet-200 text-violet-950 rounded-xl sm:rounded-2xl font-black text-sm sm:text-xl border sm:border-2 border-violet-400 transition-all cursor-pointer min-h-[42px] sm:min-h-[54px] disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-1.5 sm:py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl sm:rounded-2xl font-black text-sm sm:text-xl border-2 sm:border-3 border-blue-700 shadow-sm transition-all active:scale-95 cursor-pointer min-h-[42px] sm:min-h-[54px] disabled:opacity-50"
+          title="Repetir melodía"
+          aria-label="Repetir melodía"
         >
-          <Volume2 className="w-4 h-4 sm:w-6 sm:h-6 stroke-[2.5]" />
+          <Volume2 className="w-4 h-4 sm:w-6 sm:h-6 text-white stroke-[2.5]" />
           <span>Repetir</span>
         </button>
       </div>

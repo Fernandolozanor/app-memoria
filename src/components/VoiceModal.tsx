@@ -129,8 +129,8 @@ export function VoiceModal({ isOpen, onClose }: Props) {
                     }}
                     className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl font-black text-xs sm:text-sm transition-all cursor-pointer shrink-0 border-2 ${
                       isTesting
-                        ? 'bg-amber-300 text-amber-950 border-amber-400 animate-pulse'
-                        : 'bg-white hover:bg-emerald-100 text-emerald-800 border-emerald-300 shadow-xs active:scale-95'
+                        ? 'bg-blue-200 text-blue-950 border-blue-400 ring-2 ring-blue-300 animate-pulse'
+                        : 'bg-blue-600 hover:bg-blue-700 text-white border-blue-700 shadow-xs active:scale-95'
                     }`}
                     title="Escuchar cómo suena esta voz"
                   >
