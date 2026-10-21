@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Eye, HelpCircle } from 'lucide-react'
+import { Eye, HelpCircle, RotateCcw } from 'lucide-react'
 import { sound } from '../services/sound'
 import { speech } from '../services/speech'
 import { SpeakerButton } from '../components/SpeakerButton'
@@ -291,6 +291,7 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
   const [round, setRound] = useState(0) // 0: 4 faces, 1: 6 faces, 2: 9 faces
   const [sessionTargets, setSessionTargets] = useState<Person[]>(getInitialTargets)
   const [phase, setPhase] = useState<'memorize' | 'recall'>('memorize')
+  const [isCardFlipped, setIsCardFlipped] = useState(false) // 3D card flip tracker
   const [choices, setChoices] = useState<Person[]>([])
   const [visibleIndices, setVisibleIndices] = useState<number[]>([]) // Staggered reveal tracker
   const [feedback, setFeedback] = useState('')
@@ -311,7 +312,26 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
     return id
   }
 
-  // Configure choices and speak whenever round changes
+  const currentTarget = sessionTargets[round] || sessionTargets[0]
+
+  const triggerRecall = (choicesList: Person[], targetPerson: Person) => {
+    setPhase('recall')
+    setVisibleIndices([])
+    speech.speak(`¿Quién es ${targetPerson.name}? Toca su cara.`)
+
+    // Staggered reveal in randomized order so they don't appear in predictable top-to-bottom sequence
+    const delayBetween = choicesList.length === 4 ? 200 : choicesList.length === 6 ? 180 : 150
+    const randomizedRevealOrder = shuffle(Array.from({ length: choicesList.length }, (_, i) => i))
+
+    randomizedRevealOrder.forEach((slotIdx, step) => {
+      addTimeout(() => {
+        sound.playTap()
+        setVisibleIndices((prev) => (prev.includes(slotIdx) ? prev : [...prev, slotIdx]))
+      }, 150 + step * delayBetween)
+    })
+  }
+
+  // Configure choices and manage 1.5s viewing duration before card flips
   useEffect(() => {
     clearAllTimeouts()
 
@@ -349,19 +369,28 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
 
     setChoices(choiceArray)
     setVisibleIndices([])
+    setIsCardFlipped(false)
     setPhase('memorize')
     setFeedback('')
     isAdvancingRef.current = false
 
-    const pronoun = target.gender === 'M' ? 'Él es' : 'Ella es'
+    // Initial voice prompt
+    addTimeout(() => {
+      speech.speak(`${target.name}. ¡Recuerda su cara!`)
+    }, 150)
 
-    // 250ms delay ensures speech synthesis is ready and DOM mounted
-    const timer = setTimeout(() => {
-      speech.speak(`${pronoun} ${target.name}. ${target.hobby}. Recuerda su cara.`)
-    }, 250)
+    // Visualise face for 1.5 seconds (1500ms), and afterwards flip the card
+    addTimeout(() => {
+      sound.playTap()
+      setIsCardFlipped(true)
+    }, 1650) // 150ms mount buffer + 1500ms viewing = 1650ms
+
+    // Once the 3D flip animation completes, transition to recall phase
+    addTimeout(() => {
+      triggerRecall(choiceArray, target)
+    }, 2250) // 1650ms + 600ms flip animation
 
     return () => {
-      clearTimeout(timer)
       clearAllTimeouts()
       speech.stop()
     }
@@ -374,34 +403,37 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
     setSessionTargets(fresh)
     setRound(0)
     setVisibleIndices([])
+    setIsCardFlipped(false)
     setIsSuccess(false)
   }
 
-  const currentTarget = sessionTargets[round] || sessionTargets[0]
-  if (!currentTarget) return null
-
-  const handleFinishMemorize = () => {
-    sound.playTap()
+  // Allows user to peek at the face again for 1.5 seconds if they forgot
+  const handleShowFaceAgain = () => {
+    if (isAdvancingRef.current || !currentTarget) return
     clearAllTimeouts()
-    setPhase('recall')
-    setVisibleIndices([])
+    speech.stop()
+    sound.playTap()
 
-    speech.speak(`¿Quién es ${currentTarget.name}? Toca su cara.`)
+    setIsCardFlipped(false)
+    setPhase('memorize')
 
-    // Staggered appearance in randomized slot order so they don't appear in predictable top-to-bottom sequence
-    const delayBetween = choices.length === 4 ? 200 : choices.length === 6 ? 180 : 150
-    const randomizedRevealOrder = shuffle(Array.from({ length: choices.length }, (_, i) => i))
+    addTimeout(() => {
+      speech.speak(`${currentTarget.name}. ¡Recuerda su cara!`)
+    }, 100)
 
-    randomizedRevealOrder.forEach((slotIdx, step) => {
-      addTimeout(() => {
-        sound.playTap()
-        setVisibleIndices((prev) => (prev.includes(slotIdx) ? prev : [...prev, slotIdx]))
-      }, 150 + step * delayBetween)
-    })
+    // Show for 1.5s, then flip again
+    addTimeout(() => {
+      sound.playTap()
+      setIsCardFlipped(true)
+    }, 1600)
+
+    addTimeout(() => {
+      triggerRecall(choices, currentTarget)
+    }, 2200)
   }
 
   const handleSelectPerson = (person: Person) => {
-    if (isAdvancingRef.current) return
+    if (isAdvancingRef.current || !currentTarget) return
     sound.playTap()
 
     if (person.id === currentTarget.id) {
@@ -433,6 +465,8 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
     }
   }
 
+  if (!currentTarget) return null
+
   const pronoun = currentTarget.gender === 'M' ? 'Él es' : 'Ella es'
   const choiceCount = round === 0 ? 4 : round === 1 ? 6 : 9
 
@@ -462,27 +496,70 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
           <div className="flex-1 flex flex-col justify-between min-h-0 overflow-hidden">
             <div className="inline-flex items-center justify-center gap-2 text-pink-950 font-black text-base sm:text-3xl mb-1 shrink-0">
               <Eye className="w-6 h-6 sm:w-10 sm:h-10 text-pink-600 stroke-[2.5]" />
-              <span>Recuerda su cara:</span>
+              <span>Recuerda su cara (1,5 s):</span>
             </div>
 
-            <div className="bg-pink-50 border-2 sm:border-4 border-pink-300 rounded-2xl sm:rounded-3xl p-3 sm:p-6 max-w-xs sm:max-w-sm mx-auto my-auto shadow-sm shrink-0">
-              <div className="text-6xl sm:text-8xl mb-1 sm:mb-2 select-none animate-in zoom-in-75 duration-300">
-                {cleanAvatar(currentTarget.avatar)}
-              </div>
-              <h4 className="font-black text-pink-950 text-xl sm:text-4xl mb-0.5 sm:mb-1">
-                {currentTarget.name}
-              </h4>
-              <p className="text-stone-800 font-bold text-xs sm:text-xl">
-                {currentTarget.hobby} {currentTarget.hobbyEmoji}
-              </p>
-            </div>
-
-            <button
-              onClick={handleFinishMemorize}
-              className="w-full py-3 sm:py-5 bg-pink-600 hover:bg-pink-700 text-white rounded-2xl sm:rounded-3xl font-black text-lg sm:text-3xl shadow-md border-2 sm:border-3 border-pink-700 transition-all active:scale-95 cursor-pointer min-h-[50px] sm:min-h-[72px] shrink-0 mt-auto"
+            {/* 3D Flip Card Container */}
+            <div
+              style={{ perspective: '1000px' }}
+              className="w-full max-w-xs sm:max-w-sm mx-auto my-auto flex-1 flex flex-col justify-center min-h-0"
             >
-              ¡Listo! Elegir su cara →
-            </button>
+              <div
+                style={{
+                  transformStyle: 'preserve-3d',
+                  transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                  transform: isCardFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+                }}
+                className="relative w-full aspect-square max-h-[220px] sm:max-h-[300px] mx-auto"
+              >
+                {/* Front Face: Person's Avatar, Name & Hobby */}
+                <div
+                  style={{ backfaceVisibility: 'hidden' }}
+                  className="absolute inset-0 bg-pink-50 border-3 sm:border-4 border-pink-300 rounded-2xl sm:rounded-3xl p-3 sm:p-6 shadow-md flex flex-col items-center justify-center text-center select-none"
+                >
+                  <span className="text-6xl sm:text-8xl mb-1 sm:mb-2 select-none animate-in zoom-in-75 duration-300">
+                    {cleanAvatar(currentTarget.avatar)}
+                  </span>
+                  <h4 className="font-black text-pink-950 text-xl sm:text-3xl mb-0.5 sm:mb-1">
+                    {currentTarget.name}
+                  </h4>
+                  <p className="text-stone-700 font-bold text-xs sm:text-lg">
+                    {currentTarget.hobby} {currentTarget.hobbyEmoji}
+                  </p>
+
+                  {/* Visual 1.5s countdown bar */}
+                  <div className="w-32 sm:w-48 h-1.5 sm:h-2.5 bg-pink-200 rounded-full mt-2 sm:mt-4 overflow-hidden">
+                    <div
+                      className="h-full bg-pink-500 rounded-full"
+                      style={{
+                        width: isCardFlipped ? '0%' : '100%',
+                        transition: 'width 1500ms linear',
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Back Face: Flipped Card Back */}
+                <div
+                  style={{
+                    backfaceVisibility: 'hidden',
+                    transform: 'rotateY(180deg)',
+                  }}
+                  className="absolute inset-0 bg-gradient-to-br from-pink-400 to-rose-500 border-3 sm:border-4 border-pink-300 rounded-2xl sm:rounded-3xl p-3 sm:p-6 shadow-md flex flex-col items-center justify-center text-center select-none"
+                >
+                  <span className="text-white font-black text-6xl sm:text-8xl select-none">
+                    ?
+                  </span>
+                  <span className="text-white font-bold text-sm sm:text-xl mt-1 opacity-90">
+                    ¿Quién era?
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <p className="text-xs sm:text-base font-bold text-stone-500 shrink-0">
+              {isCardFlipped ? '¡Tarjeta volteada! Buscando su cara...' : '¡Fíjate bien antes de que se voltee!'}
+            </p>
           </div>
         ) : (
           <div className="flex-1 flex flex-col justify-between min-h-0 overflow-hidden">
@@ -537,6 +614,17 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
                   </button>
                 )
               })}
+            </div>
+
+            {/* Action control in recall phase to re-view the face for 1.5s if forgotten */}
+            <div className="flex justify-center mt-1.5 sm:mt-3 shrink-0">
+              <button
+                onClick={handleShowFaceAgain}
+                className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-3 bg-pink-50 hover:bg-pink-100 text-pink-950 font-bold text-xs sm:text-base rounded-xl sm:rounded-2xl border-2 border-pink-300 transition-all active:scale-95 cursor-pointer shadow-xs"
+              >
+                <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5 text-pink-700" />
+                <span>¿No lo recuerdas? Volver a ver la cara</span>
+              </button>
             </div>
           </div>
         )}
