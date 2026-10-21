@@ -16,7 +16,7 @@ interface Product {
   icon: string
 }
 
-// Rich catalog of 40 universally supported everyday market and grocery products in Spain
+// Catalog of 40 universally supported market and grocery products in Spain
 const ALL_PRODUCTS: Product[] = [
   { id: 'pan', name: 'Pan', icon: '🥖' },
   { id: 'manzana', name: 'Manzana roja', icon: '🍎' },
@@ -72,6 +72,86 @@ const ROUNDS_CONFIG: RoundConfig[] = [
   { targetCount: 4, choiceCount: 12 },
 ]
 
+interface RoundTextConfig {
+  memorizeSpeech: (names: string) => string
+  memorizeSubtitle: string
+  memorizeButton: string
+  memorizeSpeaker: (names: string) => string
+  recallSpeech: string
+  recallTitle: string
+  recallSpeaker: (choiceCount: number) => string
+  roundCompleteSpeech: string
+}
+
+// Varied and natural phrases tailored to each round
+const ROUND_TEXTS: RoundTextConfig[] = [
+  {
+    memorizeSpeech: (names) =>
+      `Vamos a preparar la cesta. Fíjate bien en estos 2 productos: ${names}. Cuando te los aprendas, pulsa el botón verde.`,
+    memorizeSubtitle: 'Míralos con calma y pulsa el botón cuando los tengas en mente',
+    memorizeButton: '¡Me los sé! Ir a la tienda →',
+    memorizeSpeaker: (names) =>
+      `Fíjate en estos 2 productos: ${names}. Pulsa el botón cuando te los aprendas.`,
+    recallSpeech: 'Encuentra en el mostrador los 2 productos que apuntamos en la lista.',
+    recallTitle: '¿Recuerdas los 2 alimentos de la lista?',
+    recallSpeaker: (choiceCount) =>
+      `Toca los 2 alimentos de la lista entre los ${choiceCount} que hay en el mostrador.`,
+    roundCompleteSpeech:
+      '¡Estupendo! Has completado la primera lista sin problemas. ¡Vamos a por la siguiente!',
+  },
+  {
+    memorizeSpeech: (names) =>
+      `Muy bien. Ahora la lista tiene 3 cosas: ${names}. Tómate tu tiempo para memorizarlos y pulsa el botón verde.`,
+    memorizeSubtitle: 'Concéntrate en estos 3 alimentos y avísame cuando estés listo',
+    memorizeButton: '¡Listo! Buscar en las estanterías →',
+    memorizeSpeaker: (names) =>
+      `Esta vez son 3 productos: ${names}. Pulsa el botón cuando estés listo.`,
+    recallSpeech: 'A ver qué buena memoria tienes. Señala los 3 alimentos de la cesta.',
+    recallTitle: '¿Cuáles eran los 3 productos de esta lista?',
+    recallSpeaker: (choiceCount) =>
+      `Señala los 3 alimentos de la lista entre los ${choiceCount} productos expuestos.`,
+    roundCompleteSpeech:
+      '¡Magnífico! Ya tienes los tres productos. Ahora viene la ronda final.',
+  },
+  {
+    memorizeSpeech: (names) =>
+      `¡Última ronda! Esta lista es más completa, son 4 alimentos: ${names}. Míralos con atención y pulsa el botón cuando los recuerdes.`,
+    memorizeSubtitle: 'El gran reto final: grábate estos 4 alimentos en la memoria',
+    memorizeButton: '¡Los tengo! A por la compra →',
+    memorizeSpeaker: (names) =>
+      `Última lista con 4 productos: ${names}. Pulsa el botón cuando los tengas.`,
+    recallSpeech: 'Aquí hay más variedad. Elige los 4 alimentos que teníamos que comprar.',
+    recallTitle: '¿Dónde están los 4 alimentos que memorizaste?',
+    recallSpeaker: (choiceCount) =>
+      `Busca y toca los 4 alimentos de la lista entre los ${choiceCount} del mostrador.`,
+    roundCompleteSpeech:
+      '¡Enhorabuena! Has hecho una compra perfecta y tu memoria ha funcionado de maravilla.',
+  },
+]
+
+// Varied feedback when hitting an item (before completing the whole round)
+const HIT_PRAISES = [
+  (name: string) => `¡Eso es! Has metido ${name} en la cesta.`,
+  (name: string) => `¡Estupendo! Teníamos apuntado ${name}.`,
+  (name: string) => `¡Perfecto! Justo estaba en la lista: ${name}.`,
+  (name: string) => `¡Muy bien visto! ${name} ya está en la bolsa.`,
+]
+
+// Rotating gentle audio feedback on mistake
+const RETRY_VOICES = [
+  'Ese no lo teníamos apuntado hoy. Prueba con otro.',
+  'Ese alimento no estaba en la lista. Mira con calma.',
+  'Vaya, hoy no necesitamos ese producto. Sigue buscando.',
+  'Ese no venía en la cesta. Tómate tu tiempo y elige otro.',
+]
+
+// Rotating gentle visual feedback on mistake
+const RETRY_MESSAGES = [
+  (name: string) => `"${name}" no estaba en la lista de hoy. Busca con calma.`,
+  (name: string) => `"${name}" se queda en la tienda. ¡Prueba con otro!`,
+  (name: string) => `"${name}" no lo habíamos apuntado. Tómate tu tiempo.`,
+]
+
 export function ShoppingList({ onComplete, onExit }: Props) {
   const [roundIdx, setRoundIdx] = useState(0) // 0 (6 choices), 1 (10 choices), 2 (12 choices)
   const [phase, setPhase] = useState<'memorize' | 'recall'>('memorize')
@@ -80,9 +160,13 @@ export function ShoppingList({ onComplete, onExit }: Props) {
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [hintMessage, setHintMessage] = useState<string>('')
   const [isSuccess, setIsSuccess] = useState(false)
+
   const isAdvancingRef = useRef(false)
+  const retryCountRef = useRef(0)
+  const hitCountRef = useRef(0)
 
   const currentConfig = ROUNDS_CONFIG[roundIdx] || ROUNDS_CONFIG[0]
+  const currentTexts = ROUND_TEXTS[roundIdx] || ROUND_TEXTS[0]
 
   // Setup round whenever roundIdx changes
   useEffect(() => {
@@ -92,7 +176,7 @@ export function ShoppingList({ onComplete, onExit }: Props) {
     setPhase('memorize')
     setIsSuccess(false)
 
-    // Select random targets and distractors from the big catalog
+    // Select random targets and distractors from the catalog
     const shuffledCatalog = [...ALL_PRODUCTS].sort(() => 0.5 - Math.random())
     const targets = shuffledCatalog.slice(0, currentConfig.targetCount)
     const distractorPool = shuffledCatalog.filter((p) => !targets.some((t) => t.id === p.id))
@@ -106,7 +190,7 @@ export function ShoppingList({ onComplete, onExit }: Props) {
 
     const names = targets.map((t) => t.name).join(', ')
     const timer = setTimeout(() => {
-      speech.speak(`Memoriza: ${names}. Toca el botón verde cuando los recuerdes.`)
+      speech.speak(currentTexts.memorizeSpeech(names))
     }, 250)
 
     return () => {
@@ -119,7 +203,7 @@ export function ShoppingList({ onComplete, onExit }: Props) {
     if (isAdvancingRef.current) return
     sound.playTap()
     setPhase('recall')
-    speech.speak(`Toca los ${targetItems.length} alimentos que guardamos en la cesta.`)
+    speech.speak(currentTexts.recallSpeech)
   }
 
   const handleSelectProduct = (product: Product) => {
@@ -133,7 +217,10 @@ export function ShoppingList({ onComplete, onExit }: Props) {
         sound.playSuccess()
         const newSelected = [...selectedIds, product.id]
         setSelectedIds(newSelected)
-        setHintMessage(`¡Muy bien! Has encontrado: ${product.name}`)
+
+        const praiseFn = HIT_PRAISES[hitCountRef.current % HIT_PRAISES.length]
+        hitCountRef.current += 1
+        setHintMessage(praiseFn(product.name))
 
         // Check if all targets for this round were found
         if (newSelected.length === targetItems.length) {
@@ -153,19 +240,21 @@ export function ShoppingList({ onComplete, onExit }: Props) {
             }, 500)
           }
 
-          if (roundIdx + 1 < ROUNDS_CONFIG.length) {
-            speech.speak('¡Excelente! Has encontrado todos los alimentos de esta ronda.', advance)
-            setTimeout(advance, 7000)
-          } else {
-            speech.speak('¡Enhorabuena! Has completado todas las compras.', advance)
-            setTimeout(advance, 7000)
-          }
+          speech.speak(currentTexts.roundCompleteSpeech, advance)
+          setTimeout(advance, 7000)
+        } else {
+          // Speak a brief warm confirmation for this item
+          speech.speak(`¡Muy bien, ${product.name}!`)
         }
       }
     } else {
       sound.playGentleRetry()
-      setHintMessage(`"${product.name}" no estaba en la lista. Busca con calma.`)
-      speech.speak('Ese no estaba. Prueba con otro.')
+      const msgFn = RETRY_MESSAGES[retryCountRef.current % RETRY_MESSAGES.length]
+      const voiceText = RETRY_VOICES[retryCountRef.current % RETRY_VOICES.length]
+      retryCountRef.current += 1
+
+      setHintMessage(msgFn(product.name))
+      speech.speak(voiceText)
     }
   }
 
@@ -190,8 +279,8 @@ export function ShoppingList({ onComplete, onExit }: Props) {
         <SpeakerButton
           text={
             phase === 'memorize'
-              ? `Recuerda: ${targetNames}. Toca el botón verde cuando estés listo.`
-              : `Toca los ${targetItems.length} alimentos que guardamos en la cesta. Hay ${currentConfig.choiceCount} en el mostrador.`
+              ? currentTexts.memorizeSpeaker(targetNames)
+              : currentTexts.recallSpeaker(currentConfig.choiceCount)
           }
           label="Escuchar"
         />
@@ -206,7 +295,7 @@ export function ShoppingList({ onComplete, onExit }: Props) {
             </div>
 
             <p className="text-sm sm:text-xl font-bold text-stone-600">
-              Míralos bien y pulsa el botón cuando te los hayas aprendido
+              {currentTexts.memorizeSubtitle}
             </p>
           </div>
 
@@ -230,7 +319,7 @@ export function ShoppingList({ onComplete, onExit }: Props) {
             onClick={handleFinishMemorizing}
             className="w-full py-3 sm:py-5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl sm:rounded-3xl font-black text-lg sm:text-3xl shadow-md border-2 sm:border-3 border-emerald-700 transition-all active:scale-95 cursor-pointer min-h-[50px] sm:min-h-[72px] shrink-0 mt-auto"
           >
-            ¡Listo! Buscar alimentos →
+            {currentTexts.memorizeButton}
           </button>
         </div>
       )}
@@ -241,7 +330,7 @@ export function ShoppingList({ onComplete, onExit }: Props) {
             <div className="flex items-center gap-2">
               <ShoppingBag className="w-5 h-5 sm:w-8 sm:h-8 text-amber-600 stroke-[2.5]" />
               <h3 className="font-black text-base sm:text-2xl text-stone-950">
-                ¿Cuáles eran los {targetItems.length} de la lista?
+                {currentTexts.recallTitle}
               </h3>
             </div>
             <span className="font-black text-xs sm:text-lg text-emerald-950 bg-emerald-100 px-2 sm:px-3 py-1 rounded-xl border border-emerald-400">
@@ -284,7 +373,12 @@ export function ShoppingList({ onComplete, onExit }: Props) {
                       <Check className="w-3.5 h-3.5 sm:w-5 sm:h-5 stroke-[3]" />
                     </div>
                   )}
-                  <span className={`${currentConfig.choiceCount >= 10 ? 'text-2xl sm:text-5xl' : 'text-3xl sm:text-6xl'} mb-0.5`} aria-hidden="true">
+                  <span
+                    className={`${
+                      currentConfig.choiceCount >= 10 ? 'text-2xl sm:text-5xl' : 'text-3xl sm:text-6xl'
+                    } mb-0.5`}
+                    aria-hidden="true"
+                  >
                     {item.icon}
                   </span>
                   <span className="font-black text-stone-950 text-[10px] sm:text-lg text-center leading-tight break-words w-full px-0.5">
@@ -300,7 +394,7 @@ export function ShoppingList({ onComplete, onExit }: Props) {
       {isSuccess && (
         <SuccessCelebration
           title="¡Compra completada!"
-          message="Has superado las 3 rondas recordando todos los productos entre 6, 10 y 12 artículos."
+          message="Has superado las 3 listas de la compra recordando todos los productos entre 6, 10 y 12 artículos del mercado."
           onRestart={handleRestart}
           onHome={onExit}
         />
