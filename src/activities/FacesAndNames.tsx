@@ -24,6 +24,16 @@ export function cleanAvatar(avatar: string): string {
   return avatar.replace(/[\u2640\u2642\uFE0F\u200D]/g, '').trim()
 }
 
+// Unbiased Fisher-Yates shuffle
+function shuffle<T>(array: T[]): T[] {
+  const result = [...array]
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[result[i], result[j]] = [result[j], result[i]]
+  }
+  return result
+}
+
 // Rich, diverse database representing all ages (seniors, adults, youth) and ethnicities/races
 const PEOPLE_DATABASE: Person[] = [
   // Older adults & seniors (diverse skin tones & backgrounds)
@@ -274,7 +284,7 @@ const PEOPLE_DATABASE: Person[] = [
 ]
 
 function getInitialTargets(): Person[] {
-  return [...PEOPLE_DATABASE].sort(() => 0.5 - Math.random()).slice(0, 3)
+  return shuffle(PEOPLE_DATABASE).slice(0, 3)
 }
 
 export function FacesAndNames({ onComplete, onExit }: Props) {
@@ -288,6 +298,7 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
 
   const isAdvancingRef = useRef(false)
   const timeoutsRef = useRef<number[]>([])
+  const lastTargetSlotRef = useRef<number | null>(null) // Ensures target face doesn't repeat the same slot
 
   const clearAllTimeouts = () => {
     timeoutsRef.current.forEach((id) => clearTimeout(id))
@@ -309,11 +320,34 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
 
     const choiceCount = round === 0 ? 4 : round === 1 ? 6 : 9
     const poolWithoutTarget = PEOPLE_DATABASE.filter((p) => p.id !== target.id)
-    const shuffledDistractors = [...poolWithoutTarget].sort(() => 0.5 - Math.random())
+    const shuffledDistractors = shuffle(poolWithoutTarget)
     const distractors = shuffledDistractors.slice(0, choiceCount - 1)
-    const allChoices = [target, ...distractors].sort(() => 0.5 - Math.random())
 
-    setChoices(allChoices)
+    // Guarantee that target does not land in the exact same slot index as in the previous round
+    const allSlots = Array.from({ length: choiceCount }, (_, i) => i)
+    const eligibleSlots =
+      lastTargetSlotRef.current !== null && choiceCount > 1
+        ? allSlots.filter((slot) => slot !== lastTargetSlotRef.current)
+        : allSlots
+
+    const chosenTargetSlot =
+      eligibleSlots.length > 0
+        ? eligibleSlots[Math.floor(Math.random() * eligibleSlots.length)]
+        : Math.floor(Math.random() * choiceCount)
+
+    lastTargetSlotRef.current = chosenTargetSlot
+
+    // Populate choices grid placing the target at chosenTargetSlot
+    const choiceArray: Person[] = new Array(choiceCount)
+    choiceArray[chosenTargetSlot] = target
+    let distIdx = 0
+    for (let i = 0; i < choiceCount; i++) {
+      if (i !== chosenTargetSlot) {
+        choiceArray[i] = distractors[distIdx++]
+      }
+    }
+
+    setChoices(choiceArray)
     setVisibleIndices([])
     setPhase('memorize')
     setFeedback('')
@@ -335,6 +369,7 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
 
   const initGame = () => {
     clearAllTimeouts()
+    lastTargetSlotRef.current = null
     const fresh = getInitialTargets()
     setSessionTargets(fresh)
     setRound(0)
@@ -353,13 +388,15 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
 
     speech.speak(`¿Quién es ${currentTarget.name}? Toca su cara.`)
 
-    // Staggered appearance: faces appear one by one ("poco a poco")
+    // Staggered appearance in randomized slot order so they don't appear in predictable top-to-bottom sequence
     const delayBetween = choices.length === 4 ? 200 : choices.length === 6 ? 180 : 150
-    choices.forEach((_, idx) => {
+    const randomizedRevealOrder = shuffle(Array.from({ length: choices.length }, (_, i) => i))
+
+    randomizedRevealOrder.forEach((slotIdx, step) => {
       addTimeout(() => {
         sound.playTap()
-        setVisibleIndices((prev) => (prev.includes(idx) ? prev : [...prev, idx]))
-      }, 150 + idx * delayBetween)
+        setVisibleIndices((prev) => (prev.includes(slotIdx) ? prev : [...prev, slotIdx]))
+      }, 150 + step * delayBetween)
     })
   }
 
