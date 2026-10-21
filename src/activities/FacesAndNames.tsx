@@ -129,7 +129,7 @@ const PEOPLE_DATABASE: Person[] = [
     id: 'pedro',
     name: 'Pedro',
     gender: 'M',
-    avatar: '🧔🏼', // Clean single bearded face without male symbol
+    avatar: '🧔🏼',
     hobby: 'Arregla relojes antiguos',
     hobbyEmoji: '⏰',
   },
@@ -282,12 +282,28 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
   const [sessionTargets, setSessionTargets] = useState<Person[]>(getInitialTargets)
   const [phase, setPhase] = useState<'memorize' | 'recall'>('memorize')
   const [choices, setChoices] = useState<Person[]>([])
+  const [visibleIndices, setVisibleIndices] = useState<number[]>([]) // Staggered reveal tracker
   const [feedback, setFeedback] = useState('')
   const [isSuccess, setIsSuccess] = useState(false)
+
   const isAdvancingRef = useRef(false)
+  const timeoutsRef = useRef<number[]>([])
+
+  const clearAllTimeouts = () => {
+    timeoutsRef.current.forEach((id) => clearTimeout(id))
+    timeoutsRef.current = []
+  }
+
+  const addTimeout = (fn: () => void, delayMs: number) => {
+    const id = window.setTimeout(fn, delayMs)
+    timeoutsRef.current.push(id)
+    return id
+  }
 
   // Configure choices and speak whenever round changes
   useEffect(() => {
+    clearAllTimeouts()
+
     const target = sessionTargets[round]
     if (!target) return
 
@@ -298,6 +314,7 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
     const allChoices = [target, ...distractors].sort(() => 0.5 - Math.random())
 
     setChoices(allChoices)
+    setVisibleIndices([])
     setPhase('memorize')
     setFeedback('')
     isAdvancingRef.current = false
@@ -311,14 +328,17 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
 
     return () => {
       clearTimeout(timer)
+      clearAllTimeouts()
       speech.stop()
     }
   }, [round, sessionTargets])
 
   const initGame = () => {
+    clearAllTimeouts()
     const fresh = getInitialTargets()
     setSessionTargets(fresh)
     setRound(0)
+    setVisibleIndices([])
     setIsSuccess(false)
   }
 
@@ -327,8 +347,20 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
 
   const handleFinishMemorize = () => {
     sound.playTap()
+    clearAllTimeouts()
     setPhase('recall')
+    setVisibleIndices([])
+
     speech.speak(`¿Quién es ${currentTarget.name}? Toca su cara.`)
+
+    // Staggered appearance: faces appear one by one ("poco a poco")
+    const delayBetween = choices.length === 4 ? 200 : choices.length === 6 ? 180 : 150
+    choices.forEach((_, idx) => {
+      addTimeout(() => {
+        sound.playTap()
+        setVisibleIndices((prev) => (prev.includes(idx) ? prev : [...prev, idx]))
+      }, 150 + idx * delayBetween)
+    })
   }
 
   const handleSelectPerson = (person: Person) => {
@@ -397,7 +429,7 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
             </div>
 
             <div className="bg-pink-50 border-2 sm:border-4 border-pink-300 rounded-2xl sm:rounded-3xl p-3 sm:p-6 max-w-xs sm:max-w-sm mx-auto my-auto shadow-sm shrink-0">
-              <div className="text-6xl sm:text-8xl mb-1 sm:mb-2 select-none">
+              <div className="text-6xl sm:text-8xl mb-1 sm:mb-2 select-none animate-in zoom-in-75 duration-300">
                 {cleanAvatar(currentTarget.avatar)}
               </div>
               <h4 className="font-black text-pink-950 text-xl sm:text-4xl mb-0.5 sm:mb-1">
@@ -428,32 +460,46 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
               </div>
             )}
 
-            {/* Clean grid displaying ONLY the face cards without distracting labels */}
+            {/* Grid displaying the face cards appearing poco a poco */}
             <div
               className={`grid gap-1.5 sm:gap-3 max-w-md mx-auto flex-1 min-h-0 my-auto items-center justify-center w-full ${
                 choiceCount === 4 ? 'grid-cols-2' : 'grid-cols-3'
               }`}
             >
-              {choices.map((person) => (
-                <button
-                  key={person.id}
-                  onClick={() => handleSelectPerson(person)}
-                  className={`bg-stone-50 hover:bg-pink-50 border-2 sm:border-4 border-stone-300 hover:border-pink-500 rounded-2xl sm:rounded-3xl p-1 sm:p-3 flex items-center justify-center shadow-xs sm:shadow-md active:scale-95 transition-all cursor-pointer h-full min-h-[58px] sm:min-h-[110px]`}
-                  aria-label={`Cara de ${person.name}`}
-                >
-                  <span
-                    className={`select-none ${
-                      choiceCount === 9
-                        ? 'text-4xl sm:text-6xl'
-                        : choiceCount === 6
-                        ? 'text-5xl sm:text-7xl'
-                        : 'text-5xl sm:text-8xl'
+              {choices.map((person, idx) => {
+                const isVisible = visibleIndices.includes(idx)
+                return (
+                  <button
+                    key={person.id}
+                    disabled={!isVisible || isAdvancingRef.current}
+                    onClick={() => handleSelectPerson(person)}
+                    className={`border-2 sm:border-4 rounded-2xl sm:rounded-3xl p-1 sm:p-3 flex items-center justify-center shadow-xs sm:shadow-md transition-all h-full min-h-[58px] sm:min-h-[110px] ${
+                      isVisible
+                        ? 'bg-stone-50 hover:bg-pink-50 border-stone-300 hover:border-pink-500 cursor-pointer active:scale-95'
+                        : 'bg-pink-50/50 border-dashed border-pink-200 cursor-default'
                     }`}
+                    aria-label={isVisible ? `Cara de ${person.name}` : 'Tarjeta por descubrir'}
                   >
-                    {cleanAvatar(person.avatar)}
-                  </span>
-                </button>
-              ))}
+                    {isVisible ? (
+                      <span
+                        className={`select-none animate-in zoom-in-75 fade-in duration-300 ${
+                          choiceCount === 9
+                            ? 'text-4xl sm:text-6xl'
+                            : choiceCount === 6
+                            ? 'text-5xl sm:text-7xl'
+                            : 'text-5xl sm:text-8xl'
+                        }`}
+                      >
+                        {cleanAvatar(person.avatar)}
+                      </span>
+                    ) : (
+                      <span className="text-pink-300 font-black text-2xl sm:text-4xl select-none opacity-40 animate-pulse">
+                        ?
+                      </span>
+                    )}
+                  </button>
+                )
+              })}
             </div>
           </div>
         )}
