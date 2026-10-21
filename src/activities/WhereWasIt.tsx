@@ -13,29 +13,51 @@ interface Props {
 interface ItemToPlace {
   name: string
   icon: string
+  isPlural: boolean
 }
 
-// Everyday items often misplaced at home
+// Everyday items often misplaced at home, with grammatical plurality tag
 const ITEMS_POOL: ItemToPlace[] = [
-  { name: 'las gafas', icon: '👓' },
-  { name: 'las llaves', icon: '🗝️' },
-  { name: 'el monedero', icon: '👛' },
-  { name: 'el reloj', icon: '⏰' },
-  { name: 'el libro', icon: '📖' },
-  { name: 'la taza de café', icon: '☕' },
-  { name: 'el teléfono', icon: '📱' },
-  { name: 'el paraguas', icon: '☂️' },
-  { name: 'la libreta', icon: '📓' },
-  { name: 'la cartera', icon: '💼' },
-  { name: 'el anillo', icon: '💍' },
-  { name: 'el pastillero', icon: '💊' },
+  { name: 'las gafas', icon: '👓', isPlural: true },
+  { name: 'las llaves', icon: '🗝️', isPlural: true },
+  { name: 'el monedero', icon: '👛', isPlural: false },
+  { name: 'el reloj', icon: '⏰', isPlural: false },
+  { name: 'el libro', icon: '📖', isPlural: false },
+  { name: 'la taza de café', icon: '☕', isPlural: false },
+  { name: 'el teléfono', icon: '📱', isPlural: false },
+  { name: 'el paraguas', icon: '☂️', isPlural: false },
+  { name: 'la libreta', icon: '📓', isPlural: false },
+  { name: 'la cartera', icon: '💼', isPlural: false },
+  { name: 'el anillo', icon: '💍', isPlural: false },
+  { name: 'el pastillero', icon: '💊', isPlural: false },
 ]
 
-// 3 progressive rounds: exactly 3, 4, and 5 cards flip randomly among the 9 cards
+// 3 progressive rounds: 9, 12, and 16 total cards on the table
 const ROUND_CONFIGS = [
-  { flippedCount: 3, label: '3 de 9 tarjetas' },
-  { flippedCount: 4, label: '4 de 9 tarjetas' },
-  { flippedCount: 5, label: '5 de 9 tarjetas' },
+  {
+    totalCards: 9,
+    flippedCount: 3,
+    gridCols: 'grid-cols-3',
+    maxW: 'max-w-xs sm:max-w-md',
+    cardMaxH: 'max-h-[82px] sm:max-h-[125px]',
+    iconSize: 'text-3xl sm:text-5xl',
+  },
+  {
+    totalCards: 12,
+    flippedCount: 4,
+    gridCols: 'grid-cols-4',
+    maxW: 'max-w-sm sm:max-w-lg',
+    cardMaxH: 'max-h-[76px] sm:max-h-[115px]',
+    iconSize: 'text-2xl sm:text-4xl',
+  },
+  {
+    totalCards: 16,
+    flippedCount: 5,
+    gridCols: 'grid-cols-4',
+    maxW: 'max-w-xs sm:max-w-md',
+    cardMaxH: 'max-h-[64px] sm:max-h-[96px]',
+    iconSize: 'text-2xl sm:text-4xl',
+  },
 ]
 
 // Unbiased Fisher-Yates array shuffle
@@ -53,31 +75,46 @@ function getSessionItems(): ItemToPlace[] {
 }
 
 export function WhereWasIt({ onComplete, onExit }: Props) {
-  const [round, setRound] = useState(0) // 0 (3 flipped), 1 (4 flipped), 2 (5 flipped)
+  const [round, setRound] = useState(0) // 0 (9 cards), 1 (12 cards), 2 (16 cards)
   const [sessionItems, setSessionItems] = useState<ItemToPlace[]>(getSessionItems)
   const [phase, setPhase] = useState<'intro' | 'showing' | 'guessing'>('intro')
-  const [revealOrder, setRevealOrder] = useState<number[]>([]) // random sequential order of appearance
-  const [visibleRevealedSlots, setVisibleRevealedSlots] = useState<number[]>([]) // currently revealed slots in showing
+  const [revealOrder, setRevealOrder] = useState<number[]>([]) // sequential order of appearance
+  const [visibleRevealedSlots, setVisibleRevealedSlots] = useState<number[]>([]) // currently face-up slots
   const [targetSlot, setTargetSlot] = useState(0) // which card holds the item
   const [revealedSlots, setRevealedSlots] = useState<number[]>([]) // cards user has clicked in guessing
   const [feedback, setFeedback] = useState('')
   const [isSuccess, setIsSuccess] = useState(false)
 
-  const timerRef = useRef<number | null>(null)
-  const staggerTimerRef = useRef<number | null>(null)
+  const timeoutsRef = useRef<number[]>([])
   const isAdvancingRef = useRef(false)
+
+  const clearAllTimeouts = () => {
+    timeoutsRef.current.forEach((id) => clearTimeout(id))
+    timeoutsRef.current = []
+  }
+
+  const addTimeout = (fn: () => void, delayMs: number) => {
+    const id = window.setTimeout(fn, delayMs)
+    timeoutsRef.current.push(id)
+    return id
+  }
 
   const currentConfig = ROUND_CONFIGS[round] || ROUND_CONFIGS[0]
   const currentItem = sessionItems[round] || sessionItems[0]
 
+  // Grammatical concordance helpers
+  const esta = currentItem.isPlural ? 'están' : 'está'
+  const estaba = currentItem.isPlural ? 'estaban' : 'estaba'
+
   const startRound = (rIdx: number) => {
-    if (timerRef.current) clearTimeout(timerRef.current)
-    if (staggerTimerRef.current) clearTimeout(staggerTimerRef.current)
+    clearAllTimeouts()
 
-    const count = ROUND_CONFIGS[rIdx].flippedCount
+    const config = ROUND_CONFIGS[rIdx] || ROUND_CONFIGS[0]
+    const count = config.flippedCount
+    const total = config.totalCards
 
-    // 1. Completely randomized position: Fisher-Yates shuffle of all 9 slot indices [0..8]
-    const allSlots = shuffle([0, 1, 2, 3, 4, 5, 6, 7, 8])
+    // 1. Completely randomized position among all totalCards
+    const allSlots = shuffle(Array.from({ length: total }, (_, i) => i))
     const chosenSlots = allSlots.slice(0, count)
 
     // 2. Completely randomized order of appearance for the reveal animation
@@ -96,13 +133,11 @@ export function WhereWasIt({ onComplete, onExit }: Props) {
     isAdvancingRef.current = false
 
     const item = sessionItems[rIdx] || sessionItems[0]
-    const timer = setTimeout(() => {
+    addTimeout(() => {
       speech.speak(
-        `Fíjate bien. En esta mesa hay 9 tarjetas. Voltearemos ${count} y en una esconderemos ${item.name}. Pulsa el botón cuando estés listo.`
+        `Fíjate bien. En esta mesa hay ${total} tarjetas. Voltearemos ${count} y en una esconderemos ${item.name}. Pulsa el botón cuando estés listo.`
       )
     }, 250)
-
-    return () => clearTimeout(timer)
   }
 
   const initGame = () => {
@@ -113,47 +148,62 @@ export function WhereWasIt({ onComplete, onExit }: Props) {
   }
 
   useEffect(() => {
-    const cleanup = startRound(round)
+    startRound(round)
     return () => {
-      cleanup()
-      if (timerRef.current) clearTimeout(timerRef.current)
-      if (staggerTimerRef.current) clearTimeout(staggerTimerRef.current)
+      clearAllTimeouts()
       speech.stop()
     }
   }, [round, sessionItems])
 
-  // Triggered when user taps "¡Estoy listo! Ver dónde está →" or "Volver a ver"
+  // Triggered when user taps "¡Estoy listo! Ver dónde está/están →" or "Volver a mirar"
   const handleShowCards = () => {
     if (isAdvancingRef.current) return
+    clearAllTimeouts()
+    speech.stop()
     sound.playTap()
+
     setPhase('showing')
     setVisibleRevealedSlots([])
 
-    // Sequential reveal in randomized order of appearance (staggered animation)
+    // 1. Sequential reveal in randomized order of appearance
     revealOrder.forEach((slotIdx, i) => {
-      window.setTimeout(() => {
+      addTimeout(() => {
         sound.playTap()
         setVisibleRevealedSlots((prev) => (prev.includes(slotIdx) ? prev : [...prev, slotIdx]))
-      }, (i + 1) * 120)
+      }, (i + 1) * 150)
     })
 
-    const totalStaggerTime = (revealOrder.length + 1) * 120
+    const totalRevealTime = (revealOrder.length + 1) * 150
 
-    staggerTimerRef.current = window.setTimeout(() => {
-      let hasShown = false
+    // 2. Once all flipped cards are revealed, start voice locution
+    addTimeout(() => {
+      let transitioned = false
       const transitionToGuessing = () => {
-        if (hasShown) return
-        hasShown = true
-        // Keep flipped cards visible: reduced to half (1.0s)
-        timerRef.current = window.setTimeout(() => {
-          setPhase('guessing')
-          speech.speak(`¿Dónde estaban ${currentItem.name}? Toca la tarjeta.`)
-        }, 1000)
+        if (transitioned) return
+        transitioned = true
+        setVisibleRevealedSlots([])
+        setPhase('guessing')
+        speech.speak(`¿Dónde ${estaba} ${currentItem.name}? Toca la tarjeta.`)
       }
 
-      speech.speak(`Aquí están ${currentItem.name}. Recuerda bien su posición.`, transitionToGuessing)
-      timerRef.current = window.setTimeout(transitionToGuessing, 4000)
-    }, totalStaggerTime)
+      // Voice speaks the explanation
+      speech.speak(
+        `Aquí ${esta} ${currentItem.name}. Recuerda bien su posición.`,
+        transitionToGuessing
+      )
+
+      // Fallback timer in case speech synthesis callback does not fire
+      addTimeout(transitionToGuessing, 4500)
+
+      // 3. While the locution is being spoken, hide the cards in REVERSE order
+      const reverseOrder = [...revealOrder].reverse()
+      reverseOrder.forEach((slotIdx, i) => {
+        addTimeout(() => {
+          sound.playTap()
+          setVisibleRevealedSlots((prev) => prev.filter((s) => s !== slotIdx))
+        }, 800 + i * 280)
+      })
+    }, totalRevealTime)
   }
 
   const handleSlotClick = (slotIdx: number) => {
@@ -167,7 +217,7 @@ export function WhereWasIt({ onComplete, onExit }: Props) {
     if (slotIdx === targetSlot) {
       isAdvancingRef.current = true
       sound.playSuccess()
-      const praise = `¡Exacto! Ahí estaban ${currentItem.name}.`
+      const praise = `¡Exacto! Ahí ${estaba} ${currentItem.name}.`
       setFeedback(praise)
 
       let hasAdv = false
@@ -188,8 +238,9 @@ export function WhereWasIt({ onComplete, onExit }: Props) {
       setTimeout(advance, 6000)
     } else {
       sound.playGentleRetry()
-      setFeedback('Ahí no estaban. Toca otra tarjeta.')
-      speech.speak('Ahí no estaban. Toca otra tarjeta.')
+      const retryMsg = `Ahí no ${estaba}. Toca otra tarjeta.`
+      setFeedback(retryMsg)
+      speech.speak(retryMsg)
     }
   }
 
@@ -197,15 +248,15 @@ export function WhereWasIt({ onComplete, onExit }: Props) {
     phase === 'intro'
       ? 'Fíjate bien'
       : phase === 'showing'
-      ? `¡Aquí están ${currentItem.name}!`
-      : `¿Dónde estaban?`
+      ? `¡Aquí ${esta} ${currentItem.name}!`
+      : `¿Dónde ${estaba}?`
 
   const subtitleText =
     phase === 'intro'
-      ? `De las 9 tarjetas de la mesa, voltearemos ${currentConfig.flippedCount} para esconder ${currentItem.name}. Pulsa el botón:`
+      ? `De las ${currentConfig.totalCards} tarjetas de la mesa, voltearemos ${currentConfig.flippedCount} para esconder ${currentItem.name}. Pulsa el botón:`
       : phase === 'showing'
-      ? `¡Memoriza en cuál de las ${currentConfig.flippedCount} tarjetas volteadas están!`
-      : `Toca la tarjeta donde estaban ${currentItem.name}:`
+      ? `¡Memoriza en cuál de las ${currentConfig.flippedCount} tarjetas volteadas ${esta}!`
+      : `Toca la tarjeta donde ${estaba} ${currentItem.name}:`
 
   return (
     <div className="flex-1 flex flex-col justify-between w-full max-w-2xl sm:max-w-3xl mx-auto overflow-hidden h-full">
@@ -214,16 +265,16 @@ export function WhereWasIt({ onComplete, onExit }: Props) {
         <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
           <span className="font-black text-stone-900 text-sm sm:text-2xl">Ronda:</span>
           <span className="px-2 sm:px-4 py-1 sm:py-2 bg-yellow-100 text-yellow-950 font-black rounded-xl sm:rounded-2xl text-xs sm:text-2xl whitespace-nowrap">
-            {round + 1} de 3 ({currentConfig.flippedCount} de 9 volteadas)
+            {round + 1} de 3 ({currentConfig.flippedCount} de {currentConfig.totalCards} volteadas)
           </span>
         </div>
 
         <SpeakerButton
           text={
             phase === 'intro'
-              ? `Fíjate bien. Hay 9 tarjetas en la mesa. Voltearemos ${currentConfig.flippedCount} para esconder ${currentItem.name}. Pulsa el botón cuando estés listo.`
+              ? `Fíjate bien. Hay ${currentConfig.totalCards} tarjetas en la mesa. Voltearemos ${currentConfig.flippedCount} para esconder ${currentItem.name}. Pulsa el botón cuando estés listo.`
               : phase === 'guessing'
-              ? `¿Dónde estaban ${currentItem.name}? Toca la tarjeta entre las 9 de la mesa.`
+              ? `¿Dónde ${estaba} ${currentItem.name}? Toca la tarjeta entre las ${currentConfig.totalCards} de la mesa.`
               : `Mira dónde dejamos ${currentItem.name}.`
           }
           label="Escuchar"
@@ -247,11 +298,14 @@ export function WhereWasIt({ onComplete, onExit }: Props) {
           </div>
         )}
 
-        {/* ALWAYS 9 cards in a 3x3 grid */}
+        {/* Dynamic cards grid: 9 (3x3), 12 (4x3), 16 (4x4) */}
         <div className="p-2 sm:p-4 bg-stone-100 rounded-2xl sm:rounded-3xl border-2 sm:border-4 border-stone-300 my-auto shadow-inner flex-1 min-h-0 flex flex-col justify-center">
-          <div className="grid grid-cols-3 gap-2 sm:gap-4 w-full max-w-xs sm:max-w-md mx-auto items-center justify-center">
-            {Array.from({ length: 9 }).map((_, slotIdx) => {
-              const isFlippedInShowing = phase === 'showing' && visibleRevealedSlots.includes(slotIdx)
+          <div
+            className={`grid ${currentConfig.gridCols} gap-2 sm:gap-4 w-full ${currentConfig.maxW} mx-auto items-center justify-center`}
+          >
+            {Array.from({ length: currentConfig.totalCards }).map((_, slotIdx) => {
+              const isFlippedInShowing =
+                phase === 'showing' && visibleRevealedSlots.includes(slotIdx)
               const isTargetItem = slotIdx === targetSlot
               const isUserClicked = phase === 'guessing' && revealedSlots.includes(slotIdx)
 
@@ -263,7 +317,7 @@ export function WhereWasIt({ onComplete, onExit }: Props) {
                   key={slotIdx}
                   disabled={phase !== 'guessing'}
                   onClick={() => handleSlotClick(slotIdx)}
-                  className={`w-full aspect-square max-h-[82px] sm:max-h-[125px] rounded-xl sm:rounded-2xl border-2 sm:border-4 flex flex-col items-center justify-center p-1 sm:p-2 transition-all select-none ${
+                  className={`w-full aspect-square ${currentConfig.cardMaxH} rounded-xl sm:rounded-2xl border-2 sm:border-4 flex flex-col items-center justify-center p-1 sm:p-2 transition-all select-none ${
                     phase === 'guessing' ? 'cursor-pointer active:scale-95' : 'cursor-default'
                   } ${
                     isShowingFace
@@ -276,7 +330,7 @@ export function WhereWasIt({ onComplete, onExit }: Props) {
                 >
                   {isShowingFace ? (
                     isTargetItem ? (
-                      <span className="text-3xl sm:text-5xl animate-in zoom-in-75 duration-200">
+                      <span className={`${currentConfig.iconSize} animate-in zoom-in-75 duration-200`}>
                         {currentItem.icon}
                       </span>
                     ) : (
@@ -287,7 +341,7 @@ export function WhereWasIt({ onComplete, onExit }: Props) {
                       </div>
                     )
                   ) : (
-                    <span className="text-white font-black text-2xl sm:text-5xl">?</span>
+                    <span className={`text-white font-black ${currentConfig.iconSize}`}>?</span>
                   )}
                 </button>
               )
@@ -302,7 +356,7 @@ export function WhereWasIt({ onComplete, onExit }: Props) {
               onClick={handleShowCards}
               className="w-full py-3 sm:py-5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl sm:rounded-3xl font-black text-base sm:text-2xl shadow-md border-2 sm:border-3 border-emerald-700 transition-all active:scale-95 cursor-pointer min-h-[48px] sm:min-h-[72px]"
             >
-              ¡Estoy listo! Ver dónde están →
+              ¡Estoy listo! Ver dónde {esta} →
             </button>
           )}
 
@@ -323,7 +377,7 @@ export function WhereWasIt({ onComplete, onExit }: Props) {
       {isSuccess && (
         <SuccessCelebration
           title="¡Completado!"
-          message="Has recordado dónde estaban los objetos superando las rondas de 3, 4 y 5 tarjetas volteadas entre las 9 de la mesa."
+          message="Has recordado la posición de los objetos superando las tres rondas de 9, 12 y 16 tarjetas en la mesa."
           onRestart={initGame}
           onHome={onExit}
         />
