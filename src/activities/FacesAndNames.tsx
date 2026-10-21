@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Eye, HelpCircle, RotateCcw } from 'lucide-react'
+import { Eye, HelpCircle, RotateCcw, Play } from 'lucide-react'
 import { sound } from '../services/sound'
 import { speech } from '../services/speech'
 import { SpeakerButton } from '../components/SpeakerButton'
@@ -315,6 +315,7 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
   const currentTarget = sessionTargets[round] || sessionTargets[0]
 
   const triggerRecall = (choicesList: Person[], targetPerson: Person) => {
+    clearAllTimeouts()
     setPhase('recall')
     setVisibleIndices([])
     speech.speak(`¿Quién es ${targetPerson.name}? Toca su cara.`)
@@ -383,12 +384,13 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
     addTimeout(() => {
       sound.playTap()
       setIsCardFlipped(true)
+      // Voice prompts user to click play when ready
+      addTimeout(() => {
+        speech.speak('Tarjeta volteada. Pulsa jugar para adivinar su cara.')
+      }, 700)
     }, 1650) // 150ms mount buffer + 1500ms viewing = 1650ms
 
-    // Once the 3D flip animation completes, transition to recall phase
-    addTimeout(() => {
-      triggerRecall(choiceArray, target)
-    }, 2250) // 1650ms + 600ms flip animation
+    // IMPORTANT: Wait for the user to press the play button! Do not auto-advance.
 
     return () => {
       clearAllTimeouts()
@@ -407,6 +409,12 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
     setIsSuccess(false)
   }
 
+  // Triggered when user clicks the "¡Jugar!" button once the card is flipped
+  const handleStartGuessing = () => {
+    sound.playTap()
+    triggerRecall(choices, currentTarget)
+  }
+
   // Allows user to peek at the face again for 1.5 seconds if they forgot
   const handleShowFaceAgain = () => {
     if (isAdvancingRef.current || !currentTarget) return
@@ -421,15 +429,14 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
       speech.speak(`${currentTarget.name}. ¡Recuerda su cara!`)
     }, 100)
 
-    // Show for 1.5s, then flip again
+    // Show for 1.5s, then flip again and wait for play button
     addTimeout(() => {
       sound.playTap()
       setIsCardFlipped(true)
+      addTimeout(() => {
+        speech.speak('Pulsa jugar para buscar su cara.')
+      }, 700)
     }, 1600)
-
-    addTimeout(() => {
-      triggerRecall(choices, currentTarget)
-    }, 2200)
   }
 
   const handleSelectPerson = (person: Person) => {
@@ -484,7 +491,9 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
         <SpeakerButton
           text={
             phase === 'memorize'
-              ? `${pronoun} ${currentTarget.name}. ${currentTarget.hobby}.`
+              ? isCardFlipped
+                ? `La tarjeta ya está volteada. Pulsa el botón verde de jugar para adivinar la cara de ${currentTarget.name}.`
+                : `${pronoun} ${currentTarget.name}. ${currentTarget.hobby}.`
               : `¿Quién es ${currentTarget.name}? Toca su cara entre las ${choiceCount} opciones.`
           }
           label="Escuchar"
@@ -496,7 +505,9 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
           <div className="flex-1 flex flex-col justify-between min-h-0 overflow-hidden">
             <div className="inline-flex items-center justify-center gap-2 text-pink-950 font-black text-base sm:text-3xl mb-1 shrink-0">
               <Eye className="w-6 h-6 sm:w-10 sm:h-10 text-pink-600 stroke-[2.5]" />
-              <span>Recuerda su cara (1,5 s):</span>
+              <span>
+                {isCardFlipped ? `¿Recuerdas a ${currentTarget.name}?` : 'Recuerda su cara (1,5 s):'}
+              </span>
             </div>
 
             {/* 3D Flip Card Container */}
@@ -510,7 +521,7 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
                   transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
                   transform: isCardFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
                 }}
-                className="relative w-full aspect-square max-h-[220px] sm:max-h-[300px] mx-auto"
+                className="relative w-full aspect-square max-h-[210px] sm:max-h-[300px] mx-auto"
               >
                 {/* Front Face: Person's Avatar, Name & Hobby */}
                 <div
@@ -557,9 +568,22 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
               </div>
             </div>
 
-            <p className="text-xs sm:text-base font-bold text-stone-500 shrink-0">
-              {isCardFlipped ? '¡Tarjeta volteada! Buscando su cara...' : '¡Fíjate bien antes de que se voltee!'}
-            </p>
+            {/* Bottom action: Waits for user to click play button once flipped */}
+            <div className="shrink-0 mt-2 sm:mt-4 min-h-[50px] sm:min-h-[70px] flex items-center justify-center">
+              {isCardFlipped ? (
+                <button
+                  onClick={handleStartGuessing}
+                  className="w-full py-3 sm:py-5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl sm:rounded-3xl font-black text-base sm:text-2xl shadow-md border-2 sm:border-3 border-emerald-700 transition-all active:scale-95 cursor-pointer min-h-[48px] sm:min-h-[68px] animate-in fade-in zoom-in-95 duration-200 flex items-center justify-center gap-2"
+                >
+                  <Play className="w-5 h-5 sm:w-7 sm:h-7 fill-white" />
+                  <span>¡Jugar! Adivinar su cara →</span>
+                </button>
+              ) : (
+                <p className="text-xs sm:text-base font-bold text-stone-500 py-2">
+                  ¡Fíjate bien antes de que se voltee!
+                </p>
+              )}
+            </div>
           </div>
         ) : (
           <div className="flex-1 flex flex-col justify-between min-h-0 overflow-hidden">
