@@ -1,9 +1,8 @@
 import { useEffect } from 'react'
 import confetti from 'canvas-confetti'
-import { Sparkles, RotateCcw, Home } from 'lucide-react'
+import { Sparkles, RotateCcw, ArrowLeft } from 'lucide-react'
 import { sound } from '../services/sound'
 import { speech } from '../services/speech'
-import { SpeakerButton } from './SpeakerButton'
 
 interface Props {
   title?: string
@@ -55,29 +54,25 @@ export function SuccessCelebration({
           {title}
         </h2>
 
-        <p className="text-base sm:text-3xl text-stone-800 font-bold mb-3 sm:mb-6 leading-snug sm:leading-relaxed shrink-0">
+        <p className="text-base sm:text-3xl text-stone-800 font-bold mb-4 sm:mb-6 leading-snug sm:leading-relaxed shrink-0">
           {message}
         </p>
 
-        <div className="flex justify-center mb-3 sm:mb-6 shrink-0">
-          <SpeakerButton text={narration} label="Repetir voz" />
-        </div>
-
-        <div className="grid grid-cols-2 gap-2 sm:gap-4 shrink-0">
+        <div className="grid grid-cols-2 gap-2.5 sm:gap-4 shrink-0">
           <button
-            onClick={onRestart}
-            className="flex items-center justify-center gap-2 sm:gap-3 w-full py-3 sm:py-5 px-3 sm:px-6 text-base sm:text-2xl font-black rounded-2xl bg-stone-100 hover:bg-stone-200 text-stone-900 border-2 sm:border-3 border-stone-300 transition-all active:scale-95 cursor-pointer min-h-[50px] sm:min-h-[68px]"
+            onClick={onHome}
+            className="flex items-center justify-center gap-2 sm:gap-3 w-full py-3 sm:py-5 px-3 sm:px-6 text-base sm:text-2xl font-black rounded-2xl bg-red-600 hover:bg-red-700 text-white shadow-md sm:shadow-lg border-2 sm:border-3 border-red-700 transition-all active:scale-95 cursor-pointer min-h-[52px] sm:min-h-[68px]"
           >
-            <RotateCcw className="w-5 h-5 sm:w-7 sm:h-7 text-stone-700 stroke-[2.5]" />
-            <span>Repetir</span>
+            <ArrowLeft className="w-5 h-5 sm:w-7 sm:h-7 text-white stroke-[3]" />
+            <span>Volver</span>
           </button>
 
           <button
-            onClick={onHome}
-            className="flex items-center justify-center gap-2 sm:gap-3 w-full py-3 sm:py-5 px-3 sm:px-6 text-base sm:text-2xl font-black rounded-2xl bg-red-600 hover:bg-red-700 text-white shadow-md sm:shadow-lg border-2 sm:border-3 border-red-700 transition-all active:scale-95 cursor-pointer min-h-[50px] sm:min-h-[68px]"
+            onClick={onRestart}
+            className="flex items-center justify-center gap-2 sm:gap-3 w-full py-3 sm:py-5 px-3 sm:px-6 text-base sm:text-2xl font-black rounded-2xl bg-stone-100 hover:bg-stone-200 text-stone-900 border-2 sm:border-3 border-stone-300 transition-all active:scale-95 cursor-pointer min-h-[52px] sm:min-h-[68px]"
           >
-            <Home className="w-5 h-5 sm:w-7 sm:h-7 text-white stroke-[2.5]" />
-            <span>Volver</span>
+            <RotateCcw className="w-5 h-5 sm:w-7 sm:h-7 text-stone-700 stroke-[2.5]" />
+            <span>Repetir</span>
           </button>
         </div>
       </div>
