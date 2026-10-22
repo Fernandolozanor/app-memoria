@@ -74,10 +74,10 @@ export function SuccessCelebration({
 
           <button
             onClick={onHome}
-            className="flex items-center justify-center gap-2 sm:gap-3 w-full py-3 sm:py-5 px-3 sm:px-6 text-base sm:text-2xl font-black rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-md sm:shadow-lg border-2 sm:border-3 border-emerald-700 transition-all active:scale-95 cursor-pointer min-h-[50px] sm:min-h-[68px]"
+            className="flex items-center justify-center gap-2 sm:gap-3 w-full py-3 sm:py-5 px-3 sm:px-6 text-base sm:text-2xl font-black rounded-2xl bg-red-600 hover:bg-red-700 text-white shadow-md sm:shadow-lg border-2 sm:border-3 border-red-700 transition-all active:scale-95 cursor-pointer min-h-[50px] sm:min-h-[68px]"
           >
-            <Home className="w-5 h-5 sm:w-7 sm:h-7 stroke-[2.5]" />
-            <span>Menú</span>
+            <Home className="w-5 h-5 sm:w-7 sm:h-7 text-white stroke-[2.5]" />
+            <span>Volver</span>
           </button>
         </div>
       </div>

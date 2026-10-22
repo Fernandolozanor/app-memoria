@@ -22,11 +22,11 @@ export function Header({
           {onBack && (
             <button
               onClick={onBack}
-              className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-900 rounded-xl sm:rounded-2xl font-black text-base sm:text-xl border-2 sm:border-3 border-stone-400 transition-all active:scale-95 cursor-pointer shrink-0 min-h-[40px] sm:min-h-[54px]"
+              className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl sm:rounded-2xl font-black text-base sm:text-xl border-2 sm:border-3 border-red-700 shadow-xs transition-all active:scale-95 cursor-pointer shrink-0 min-h-[40px] sm:min-h-[54px]"
               aria-label="Volver al menú principal"
             >
-              <ArrowLeft className="w-5 h-5 sm:w-7 sm:h-7 text-stone-900 stroke-[3]" />
-              <span>Menú</span>
+              <ArrowLeft className="w-5 h-5 sm:w-7 sm:h-7 text-white stroke-[3]" />
+              <span>Volver</span>
             </button>
           )}
 
