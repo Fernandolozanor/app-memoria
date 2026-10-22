@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { sound } from '../services/sound'
 import { speech } from '../services/speech'
 import { SuccessCelebration } from '../components/SuccessCelebration'
@@ -22,9 +22,56 @@ const ITEMS = [
   { itemKey: 'radio', name: 'Radio', icon: '📻', color: 'bg-blue-100' },
   { itemKey: 'sombrero', name: 'Sombrero', icon: '👒', color: 'bg-purple-100' },
   { itemKey: 'taza', name: 'Café', icon: '☕', color: 'bg-orange-100' },
-  { itemKey: 'flor', name: 'Flores', icon: '🌸', color: 'bg-rose-100' },
+  { itemKey: 'flor', name: 'Flor', icon: '🌸', color: 'bg-rose-100' },
   { itemKey: 'paraguas', name: 'Paraguas', icon: '☂️', color: 'bg-cyan-100' },
+  { itemKey: 'gafas', name: 'Gafas', icon: '👓', color: 'bg-sky-100' },
+  { itemKey: 'llave', name: 'Llave', icon: '🔑', color: 'bg-yellow-100' },
+  { itemKey: 'libro', name: 'Libro', icon: '📖', color: 'bg-emerald-100' },
+  { itemKey: 'guitarra', name: 'Guitarra', icon: '🎸', color: 'bg-amber-100' },
+  { itemKey: 'campana', name: 'Campana', icon: '🔔', color: 'bg-yellow-100' },
+  { itemKey: 'telefono', name: 'Teléfono', icon: '☎️', color: 'bg-rose-100' },
+  { itemKey: 'vela', name: 'Vela', icon: '🕯️', color: 'bg-orange-100' },
+  { itemKey: 'tijeras', name: 'Tijeras', icon: '✂️', color: 'bg-teal-100' },
+  { itemKey: 'carta', name: 'Carta', icon: '✉️', color: 'bg-blue-100' },
+  { itemKey: 'regalo', name: 'Regalo', icon: '🎁', color: 'bg-pink-100' },
+  { itemKey: 'zapato', name: 'Zapato', icon: '👞', color: 'bg-stone-200' },
+  { itemKey: 'corona', name: 'Corona', icon: '👑', color: 'bg-amber-100' },
+  { itemKey: 'sol', name: 'Sol', icon: '☀️', color: 'bg-yellow-100' },
+  { itemKey: 'luna', name: 'Luna', icon: '🌙', color: 'bg-indigo-100' },
+  { itemKey: 'estrella', name: 'Estrella', icon: '⭐', color: 'bg-amber-100' },
+  { itemKey: 'arbol', name: 'Árbol', icon: '🌳', color: 'bg-emerald-100' },
+  { itemKey: 'perro', name: 'Perro', icon: '🐶', color: 'bg-orange-100' },
+  { itemKey: 'gato', name: 'Gato', icon: '🐱', color: 'bg-amber-100' },
+  { itemKey: 'pajaro', name: 'Pájaro', icon: '🐦', color: 'bg-sky-100' },
+  { itemKey: 'mariposa', name: 'Mariposa', icon: '🦋', color: 'bg-cyan-100' },
+  { itemKey: 'tortuga', name: 'Tortuga', icon: '🐢', color: 'bg-lime-100' },
+  { itemKey: 'caballo', name: 'Caballo', icon: '🐴', color: 'bg-amber-100' },
+  { itemKey: 'manzana', name: 'Manzana', icon: '🍎', color: 'bg-rose-100' },
+  { itemKey: 'naranja', name: 'Naranja', icon: '🍊', color: 'bg-orange-100' },
+  { itemKey: 'limon', name: 'Limón', icon: '🍋', color: 'bg-yellow-100' },
+  { itemKey: 'fresa', name: 'Fresa', icon: '🍓', color: 'bg-pink-100' },
+  { itemKey: 'uvas', name: 'Uvas', icon: '🍇', color: 'bg-purple-100' },
+  { itemKey: 'sandia', name: 'Sandía', icon: '🍉', color: 'bg-emerald-100' },
+  { itemKey: 'pan', name: 'Pan', icon: '🥖', color: 'bg-amber-100' },
+  { itemKey: 'queso', name: 'Queso', icon: '🧀', color: 'bg-yellow-100' },
+  { itemKey: 'helado', name: 'Helado', icon: '🍦', color: 'bg-pink-100' },
+  { itemKey: 'pastel', name: 'Pastel', icon: '🍰', color: 'bg-rose-100' },
+  { itemKey: 'coche', name: 'Coche', icon: '🚗', color: 'bg-red-100' },
+  { itemKey: 'barco', name: 'Barco', icon: '⛵', color: 'bg-sky-100' },
+  { itemKey: 'avion', name: 'Avión', icon: '✈️', color: 'bg-blue-100' },
+  { itemKey: 'tren', name: 'Tren', icon: '🚂', color: 'bg-emerald-100' },
+  { itemKey: 'bicicleta', name: 'Bici', icon: '🚲', color: 'bg-teal-100' },
+  { itemKey: 'casa', name: 'Casa', icon: '🏠', color: 'bg-orange-100' },
 ]
+
+function shuffle<T>(arr: T[]): T[] {
+  const copy = [...arr]
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[copy[i], copy[j]] = [copy[j], copy[i]]
+  }
+  return copy
+}
 
 export function MemoryPairs({ onComplete, onExit }: Props) {
   const [level, setLevel] = useState<3 | 4>(3) // 3 pairs default
@@ -33,9 +80,18 @@ export function MemoryPairs({ onComplete, onExit }: Props) {
   const [matchedKeys, setMatchedKeys] = useState<string[]>([])
   const [isLocked, setIsLocked] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
+  const recentKeysRef = useRef<string[]>([])
 
   const setupGame = (pairsCount: 3 | 4 = level) => {
-    const selectedItems = [...ITEMS].sort(() => 0.5 - Math.random()).slice(0, pairsCount)
+    const available = ITEMS.filter((item) => !recentKeysRef.current.includes(item.itemKey))
+    const pool = available.length >= pairsCount ? available : ITEMS
+    const selectedItems = shuffle(pool).slice(0, pairsCount)
+
+    // Keep track of the last 16 used objects so rounds are always fresh and varied
+    recentKeysRef.current = [
+      ...selectedItems.map((i) => i.itemKey),
+      ...recentKeysRef.current,
+    ].slice(0, 16)
 
     const deck: MemoryCard[] = []
     let idCounter = 1
@@ -44,9 +100,9 @@ export function MemoryPairs({ onComplete, onExit }: Props) {
       deck.push({ id: idCounter++, ...item })
     })
 
-    deck.sort(() => 0.5 - Math.random())
+    const shuffledDeck = shuffle(deck)
 
-    setCards(deck)
+    setCards(shuffledDeck)
     setFlippedIndices([])
     setMatchedKeys([])
     setIsLocked(false)
