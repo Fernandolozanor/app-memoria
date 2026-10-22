@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { RotateCcw, ShoppingBag } from 'lucide-react'
+import { ShoppingBag } from 'lucide-react'
 import { sound } from '../services/sound'
 import { speech } from '../services/speech'
 import { SuccessCelebration } from '../components/SuccessCelebration'
@@ -209,9 +209,9 @@ export function DailyCoins({ onComplete, onExit }: Props) {
     if (selectedCoins.length >= currentItem.requiredCoinCount) {
       sound.playGentleRetry()
       setFeedback(
-        `Ya tienes ${currentItem.requiredCoinCount} monedas en el mostrador. Pulsa una moneda del mostrador para quitarla o 'Borrar todo'.`
+        `Ya tienes ${currentItem.requiredCoinCount} monedas. Toca una moneda puesta para quitarla.`
       )
-      speech.speak(`Ya tienes ${currentItem.requiredCoinCount} monedas. Toca una moneda de arriba si quieres cambiarla.`)
+      speech.speak(`Ya tienes ${currentItem.requiredCoinCount} monedas. Toca una moneda puesta si quieres cambiarla.`)
       return
     }
 
@@ -275,15 +275,6 @@ export function DailyCoins({ onComplete, onExit }: Props) {
     setFeedback('')
   }
 
-  const handleResetCoins = () => {
-    if (isAdvancingRef.current) return
-    sound.playTap()
-    setSelectedCoins([])
-    setFeedback('')
-    const resetMsg = pickRandom(DAILY_COINS_VOICES.coinsReset)
-    speech.speak(resetMsg)
-  }
-
   const handleRestartGame = () => {
     const fresh = generateInitialItems()
     setSessionItems(fresh)
@@ -294,13 +285,15 @@ export function DailyCoins({ onComplete, onExit }: Props) {
   // Realistic visual styling for Euro coins with maximum size and high contrast
   const getCoinVisual = (coin: CoinInstance, isTaken: boolean) => {
     const baseClasses =
-      'relative flex flex-row items-center justify-start sm:justify-center gap-2 sm:gap-4 rounded-2xl sm:rounded-3xl font-black select-none transition-all duration-200 cursor-pointer shadow-sm sm:shadow-md px-2 sm:px-4 py-1 overflow-hidden'
+      'relative flex flex-row items-center justify-start sm:justify-center gap-2 sm:gap-4 rounded-2xl sm:rounded-3xl font-black select-none transition-all duration-200 cursor-pointer shadow-sm sm:shadow-md px-1.5 sm:px-4 py-0.5 overflow-hidden'
 
     if (isTaken) {
       return (
-        <div className="w-full h-full min-h-0 rounded-2xl sm:rounded-3xl border-3 border-dashed border-stone-300 bg-stone-100 flex flex-row items-center justify-center gap-2 text-stone-400 px-2 overflow-hidden">
-          <span className="text-xl sm:text-3xl md:text-4xl font-black">✓ Puesta:</span>
-          <span className="text-2xl sm:text-4xl md:text-5xl font-black opacity-75 shrink-0">{coin.label}</span>
+        <div className="w-full h-full min-h-0 rounded-2xl sm:rounded-3xl border-3 sm:border-4 border-dashed border-stone-300 bg-stone-100 flex flex-row items-center justify-center gap-2 text-stone-400 px-2 overflow-hidden">
+          <span className="text-2xl sm:text-4xl md:text-5xl font-black leading-none">✓ Puesta:</span>
+          <span className="text-3xl sm:text-5xl md:text-6xl font-black opacity-80 shrink-0 leading-none">
+            {coin.label}
+          </span>
         </div>
       )
     }
@@ -311,13 +304,14 @@ export function DailyCoins({ onComplete, onExit }: Props) {
           <div
             className={`${baseClasses} w-full h-full min-h-0 bg-gradient-to-br from-stone-200 via-stone-300 to-stone-400 border-3 sm:border-4 border-amber-500 hover:border-amber-600 active:scale-95`}
           >
-            <div className="w-14 h-14 sm:w-20 sm:h-20 md:w-24 md:h-24 shrink-0 rounded-full bg-gradient-to-br from-amber-300 to-amber-500 border-4 sm:border-[5px] border-amber-600 ring-3 sm:ring-4 ring-stone-300 flex items-center justify-center shadow-md">
+            <div className="h-[88%] aspect-square min-w-14 min-h-14 sm:min-w-20 sm:min-h-20 max-h-28 shrink-0 rounded-full bg-gradient-to-br from-amber-300 to-amber-500 border-4 sm:border-[6px] border-amber-600 ring-3 sm:ring-4 ring-stone-300 flex items-center justify-center shadow-md">
               <span className="text-amber-950 text-2xl sm:text-4xl md:text-5xl font-black tracking-tighter leading-none">
                 2€
               </span>
             </div>
-            <div className="flex flex-col items-start text-left leading-[0.95] min-w-0">
-              <span className="text-stone-950 font-black text-2xl sm:text-4xl md:text-5xl">2 Euros</span>
+            <div className="flex flex-col items-start text-left leading-[0.9] min-w-0">
+              <span className="text-stone-950 font-black text-3xl sm:text-5xl md:text-6xl">2 €</span>
+              <span className="text-stone-900 font-black text-lg sm:text-3xl md:text-4xl">Euros</span>
             </div>
           </div>
         )
@@ -326,13 +320,14 @@ export function DailyCoins({ onComplete, onExit }: Props) {
           <div
             className={`${baseClasses} w-full h-full min-h-0 bg-gradient-to-br from-amber-300 via-amber-400 to-amber-500 border-3 sm:border-4 border-stone-400 hover:border-stone-600 active:scale-95`}
           >
-            <div className="w-14 h-14 sm:w-20 sm:h-20 md:w-24 md:h-24 shrink-0 rounded-full bg-gradient-to-br from-stone-100 to-stone-300 border-4 sm:border-[5px] border-stone-500 ring-3 sm:ring-4 ring-amber-400 flex items-center justify-center shadow-md">
+            <div className="h-[88%] aspect-square min-w-14 min-h-14 sm:min-w-20 sm:min-h-20 max-h-28 shrink-0 rounded-full bg-gradient-to-br from-stone-100 to-stone-300 border-4 sm:border-[6px] border-stone-500 ring-3 sm:ring-4 ring-amber-400 flex items-center justify-center shadow-md">
               <span className="text-stone-900 text-2xl sm:text-4xl md:text-5xl font-black tracking-tighter leading-none">
                 1€
               </span>
             </div>
-            <div className="flex flex-col items-start text-left leading-[0.95] min-w-0">
-              <span className="text-amber-950 font-black text-2xl sm:text-4xl md:text-5xl">1 Euro</span>
+            <div className="flex flex-col items-start text-left leading-[0.9] min-w-0">
+              <span className="text-amber-950 font-black text-3xl sm:text-5xl md:text-6xl">1 €</span>
+              <span className="text-amber-950 font-black text-lg sm:text-3xl md:text-4xl">Euro</span>
             </div>
           </div>
         )
@@ -341,13 +336,13 @@ export function DailyCoins({ onComplete, onExit }: Props) {
           <div
             className={`${baseClasses} w-full h-full min-h-0 bg-gradient-to-br from-amber-200 via-amber-300 to-amber-400 border-3 sm:border-4 border-amber-600 hover:border-amber-700 active:scale-95`}
           >
-            <div className="w-14 h-14 sm:w-20 sm:h-20 md:w-24 md:h-24 shrink-0 rounded-full bg-gradient-to-br from-amber-100 to-amber-300 border-4 sm:border-[5px] border-amber-600 flex items-center justify-center shadow-md">
-              <span className="text-amber-950 text-xl sm:text-3xl md:text-4xl font-black tracking-tighter leading-none">
+            <div className="h-[88%] aspect-square min-w-14 min-h-14 sm:min-w-20 sm:min-h-20 max-h-28 shrink-0 rounded-full bg-gradient-to-br from-amber-100 to-amber-300 border-4 sm:border-[6px] border-amber-600 flex items-center justify-center shadow-md">
+              <span className="text-amber-950 text-2xl sm:text-4xl md:text-5xl font-black tracking-tighter leading-none">
                 50c
               </span>
             </div>
-            <div className="flex flex-col sm:flex-row sm:items-baseline items-start text-left leading-[0.9] sm:gap-2 min-w-0">
-              <span className="text-amber-950 font-black text-2xl sm:text-4xl md:text-5xl">50</span>
+            <div className="flex flex-col sm:flex-row sm:items-baseline items-start text-left leading-[0.88] sm:gap-2 min-w-0">
+              <span className="text-amber-950 font-black text-3xl sm:text-5xl md:text-6xl">50</span>
               <span className="text-amber-950 font-black text-lg sm:text-3xl md:text-4xl">céntimos</span>
             </div>
           </div>
@@ -357,13 +352,13 @@ export function DailyCoins({ onComplete, onExit }: Props) {
           <div
             className={`${baseClasses} w-full h-full min-h-0 bg-gradient-to-br from-amber-200 via-amber-300 to-amber-400 border-3 sm:border-4 border-amber-500 hover:border-amber-600 active:scale-95`}
           >
-            <div className="w-14 h-14 sm:w-20 sm:h-20 md:w-24 md:h-24 shrink-0 rounded-full bg-gradient-to-br from-amber-100 to-amber-300 border-4 sm:border-[5px] border-amber-500 flex items-center justify-center shadow-md">
-              <span className="text-amber-950 text-xl sm:text-3xl md:text-4xl font-black tracking-tighter leading-none">
+            <div className="h-[88%] aspect-square min-w-14 min-h-14 sm:min-w-20 sm:min-h-20 max-h-28 shrink-0 rounded-full bg-gradient-to-br from-amber-100 to-amber-300 border-4 sm:border-[6px] border-amber-500 flex items-center justify-center shadow-md">
+              <span className="text-amber-950 text-2xl sm:text-4xl md:text-5xl font-black tracking-tighter leading-none">
                 20c
               </span>
             </div>
-            <div className="flex flex-col sm:flex-row sm:items-baseline items-start text-left leading-[0.9] sm:gap-2 min-w-0">
-              <span className="text-amber-950 font-black text-2xl sm:text-4xl md:text-5xl">20</span>
+            <div className="flex flex-col sm:flex-row sm:items-baseline items-start text-left leading-[0.88] sm:gap-2 min-w-0">
+              <span className="text-amber-950 font-black text-3xl sm:text-5xl md:text-6xl">20</span>
               <span className="text-amber-950 font-black text-lg sm:text-3xl md:text-4xl">céntimos</span>
             </div>
           </div>
@@ -373,13 +368,13 @@ export function DailyCoins({ onComplete, onExit }: Props) {
           <div
             className={`${baseClasses} w-full h-full min-h-0 bg-gradient-to-br from-amber-200 via-amber-300 to-amber-400 border-3 sm:border-4 border-amber-500 hover:border-amber-600 active:scale-95`}
           >
-            <div className="w-14 h-14 sm:w-20 sm:h-20 md:w-24 md:h-24 shrink-0 rounded-full bg-gradient-to-br from-amber-100 to-amber-300 border-4 sm:border-[5px] border-amber-500 flex items-center justify-center shadow-md">
-              <span className="text-amber-950 text-xl sm:text-3xl md:text-4xl font-black tracking-tighter leading-none">
+            <div className="h-[88%] aspect-square min-w-14 min-h-14 sm:min-w-20 sm:min-h-20 max-h-28 shrink-0 rounded-full bg-gradient-to-br from-amber-100 to-amber-300 border-4 sm:border-[6px] border-amber-500 flex items-center justify-center shadow-md">
+              <span className="text-amber-950 text-2xl sm:text-4xl md:text-5xl font-black tracking-tighter leading-none">
                 10c
               </span>
             </div>
-            <div className="flex flex-col sm:flex-row sm:items-baseline items-start text-left leading-[0.9] sm:gap-2 min-w-0">
-              <span className="text-amber-950 font-black text-2xl sm:text-4xl md:text-5xl">10</span>
+            <div className="flex flex-col sm:flex-row sm:items-baseline items-start text-left leading-[0.88] sm:gap-2 min-w-0">
+              <span className="text-amber-950 font-black text-3xl sm:text-5xl md:text-6xl">10</span>
               <span className="text-amber-950 font-black text-lg sm:text-3xl md:text-4xl">céntimos</span>
             </div>
           </div>
@@ -390,13 +385,13 @@ export function DailyCoins({ onComplete, onExit }: Props) {
           <div
             className={`${baseClasses} w-full h-full min-h-0 bg-gradient-to-br from-orange-200 via-orange-300 to-orange-400 border-3 sm:border-4 border-orange-700 hover:border-orange-800 active:scale-95`}
           >
-            <div className="w-14 h-14 sm:w-20 sm:h-20 md:w-24 md:h-24 shrink-0 rounded-full bg-gradient-to-br from-orange-100 to-orange-300 border-4 sm:border-[5px] border-orange-600 flex items-center justify-center shadow-md">
-              <span className="text-orange-950 text-xl sm:text-3xl md:text-4xl font-black tracking-tighter leading-none">
+            <div className="h-[88%] aspect-square min-w-14 min-h-14 sm:min-w-20 sm:min-h-20 max-h-28 shrink-0 rounded-full bg-gradient-to-br from-orange-100 to-orange-300 border-4 sm:border-[6px] border-orange-600 flex items-center justify-center shadow-md">
+              <span className="text-orange-950 text-2xl sm:text-4xl md:text-5xl font-black tracking-tighter leading-none">
                 5c
               </span>
             </div>
-            <div className="flex flex-col sm:flex-row sm:items-baseline items-start text-left leading-[0.9] sm:gap-2 min-w-0">
-              <span className="text-orange-950 font-black text-2xl sm:text-4xl md:text-5xl">5</span>
+            <div className="flex flex-col sm:flex-row sm:items-baseline items-start text-left leading-[0.88] sm:gap-2 min-w-0">
+              <span className="text-orange-950 font-black text-3xl sm:text-5xl md:text-6xl">5</span>
               <span className="text-orange-950 font-black text-lg sm:text-3xl md:text-4xl">céntimos</span>
             </div>
           </div>
@@ -406,68 +401,58 @@ export function DailyCoins({ onComplete, onExit }: Props) {
 
   return (
     <div className="flex-1 flex flex-col justify-between w-full max-w-4xl mx-auto overflow-hidden h-full">
-      <div className="flex-1 flex flex-col justify-between bg-white border-3 sm:border-4 border-lime-400 rounded-2xl sm:rounded-3xl p-1.5 sm:p-4 shadow-md text-center min-h-0 overflow-hidden">
-        {/* Compact Top Section: Article + Round + Goal Price */}
+      <div className="flex-1 flex flex-col justify-between bg-white border-3 sm:border-4 border-lime-400 rounded-2xl sm:rounded-3xl p-1.5 sm:p-3.5 shadow-md text-center min-h-0 overflow-hidden">
+        {/* Compact Top Section with huge illustrations and text */}
         <div className="flex flex-col gap-1 sm:gap-2 shrink-0">
-          {/* Article title, emoji & round pill */}
-          <div className="flex flex-wrap items-center justify-between gap-2 px-1">
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="text-4xl sm:text-6xl shrink-0" aria-hidden="true">
+          {/* Article title, big emoji drawing & round pill */}
+          <div className="flex items-center justify-between gap-2 px-1">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <span className="text-5xl sm:text-7xl md:text-8xl leading-none shrink-0" aria-hidden="true">
                 {currentItem.emoji}
               </span>
-              <h3 className="text-2xl sm:text-4xl font-black text-stone-950 leading-none text-left">
+              <h3 className="text-2xl sm:text-4xl md:text-5xl font-black text-stone-950 leading-none text-left">
                 {currentItem.name}
               </h3>
             </div>
-            <span className="px-2.5 sm:px-4 py-1 bg-lime-100 border-2 border-lime-300 text-lime-950 font-black rounded-xl text-base sm:text-2xl shrink-0">
-              Ronda {roundIdx + 1}/4
+            <span className="px-3 sm:px-4 py-1 sm:py-1.5 bg-lime-100 border-2 sm:border-3 border-lime-400 text-lime-950 font-black rounded-xl sm:rounded-2xl text-lg sm:text-3xl shrink-0">
+              {roundIdx + 1}/4
             </span>
           </div>
 
-          {/* Goal badge + Tray combined concisely to maximize coin grid height */}
+          {/* Goal badge + Tray side-by-side to maximize vertical space for coins */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2.5 items-stretch">
             {/* Goal badge */}
-            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 bg-lime-100 border-2 sm:border-3 border-lime-400 text-lime-950 px-3 sm:px-4 py-1 sm:py-2 rounded-xl sm:rounded-2xl">
-              <span className="text-lg sm:text-2xl font-extrabold">Total:</span>
-              <span className="text-3xl sm:text-5xl font-black leading-none">{currentItem.priceLabel}</span>
-              <span className="text-base sm:text-2xl font-black bg-white px-2.5 sm:px-3 py-0.5 rounded-lg border-2 border-lime-300 text-lime-900">
-                con {currentItem.requiredCoinCount} monedas
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 bg-lime-100 border-2 sm:border-3 border-lime-400 text-lime-950 px-2.5 sm:px-4 py-1 sm:py-2 rounded-xl sm:rounded-2xl">
+              <span className="text-xl sm:text-3xl font-black">Precio:</span>
+              <span className="text-3xl sm:text-5xl md:text-6xl font-black leading-none">
+                {currentItem.priceLabel}
+              </span>
+              <span className="text-lg sm:text-2xl md:text-3xl font-black bg-white px-2.5 sm:px-3.5 py-0.5 rounded-xl border-2 border-lime-400 text-lime-900">
+                {currentItem.requiredCoinCount} 🪙
               </span>
             </div>
 
-            {/* The Tray (Mostrador de pago) */}
-            <div className="p-1.5 sm:p-2.5 rounded-xl sm:rounded-2xl bg-stone-100 border-2 sm:border-3 border-stone-300 flex flex-col justify-center gap-1 shadow-inner">
-              <div className="flex items-center justify-between gap-2 w-full">
-                <div className="text-left flex items-center gap-1.5 sm:gap-2">
-                  <ShoppingBag className="w-5 h-5 sm:w-7 sm:h-7 text-lime-700 stroke-[2.5] shrink-0" />
-                  <span className="text-lg sm:text-2xl font-extrabold text-stone-700">Llevas:</span>
-                  <span className="text-2xl sm:text-4xl font-black text-stone-950 leading-none">
-                    {formatCents(currentTotalCents)}
-                  </span>
-                  <span className="text-base sm:text-2xl font-black text-stone-600">
-                    ({currentCoinCount}/{currentItem.requiredCoinCount})
-                  </span>
-                </div>
-
-                {selectedCoins.length > 0 && (
-                  <button
-                    onClick={handleResetCoins}
-                    className="inline-flex items-center gap-1 px-2.5 sm:px-3.5 py-1 bg-amber-200 hover:bg-amber-300 text-amber-950 font-black text-base sm:text-xl rounded-lg sm:rounded-xl border-2 border-amber-400 cursor-pointer transition-all active:scale-95 shrink-0"
-                  >
-                    <RotateCcw className="w-4 h-4 sm:w-6 sm:h-6 stroke-[2.5]" />
-                    <span>Borrar</span>
-                  </button>
-                )}
+            {/* The Tray (Mostrador de pago - sin botón de borrar) */}
+            <div className="p-1.5 sm:p-2.5 rounded-xl sm:rounded-2xl bg-stone-100 border-2 sm:border-3 border-stone-300 flex flex-wrap items-center justify-center gap-2 sm:gap-3 shadow-inner">
+              <div className="flex items-center gap-1.5 sm:gap-2.5">
+                <ShoppingBag className="w-6 h-6 sm:w-9 sm:h-9 text-lime-700 stroke-[2.5] shrink-0" />
+                <span className="text-xl sm:text-3xl font-black text-stone-700">Llevas:</span>
+                <span className="text-3xl sm:text-5xl font-black text-stone-950 leading-none">
+                  {formatCents(currentTotalCents)}
+                </span>
+                <span className="text-lg sm:text-3xl font-black text-stone-600">
+                  ({currentCoinCount}/{currentItem.requiredCoinCount})
+                </span>
               </div>
 
               {/* Visual coin chips on tray */}
               {selectedCoins.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 sm:gap-2 justify-center w-full pt-1 border-t border-stone-200">
+                <div className="flex flex-wrap gap-1.5 sm:gap-2 justify-center items-center">
                   {selectedCoins.map((coin) => (
                     <button
                       key={coin.instanceId}
                       onClick={() => handleRemoveCoin(coin.instanceId)}
-                      className="px-3 sm:px-4 py-0.5 sm:py-1 bg-amber-200 hover:bg-rose-200 text-amber-950 hover:text-rose-950 rounded-full font-black text-lg sm:text-2xl border-2 border-amber-400 hover:border-rose-400 shadow-xs transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
+                      className="px-3 sm:px-4 py-0.5 sm:py-1 bg-amber-200 hover:bg-rose-200 text-amber-950 hover:text-rose-950 rounded-full font-black text-xl sm:text-3xl border-2 border-amber-400 hover:border-rose-400 shadow-xs transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
                       title="Toca para quitar del mostrador"
                     >
                       <span>🪙 {coin.label}</span>
@@ -482,7 +467,7 @@ export function DailyCoins({ onComplete, onExit }: Props) {
 
         {/* Feedback message banner */}
         {feedback && (
-          <div className="p-1.5 sm:p-2.5 rounded-xl sm:rounded-2xl bg-amber-100 border-2 border-amber-400 text-amber-950 font-black text-base sm:text-2xl my-1 animate-in fade-in shrink-0">
+          <div className="p-1.5 sm:p-2.5 rounded-xl sm:rounded-2xl bg-amber-100 border-2 border-amber-400 text-amber-950 font-black text-lg sm:text-3xl my-1 animate-in fade-in shrink-0">
             {feedback}
           </div>
         )}
@@ -496,7 +481,7 @@ export function DailyCoins({ onComplete, onExit }: Props) {
                 key={coin.instanceId}
                 onClick={() => handleSelectCoin(coin)}
                 className={`w-full h-full min-h-0 rounded-2xl sm:rounded-3xl cursor-pointer transition-all active:scale-95 ${
-                  isTaken ? 'opacity-70 cursor-pointer' : ''
+                  isTaken ? 'opacity-75 cursor-pointer' : ''
                 }`}
                 title={isTaken ? 'Toca para devolver al mostrador' : `Añadir moneda de ${coin.label}`}
                 aria-label={`Moneda de ${coin.label} ${isTaken ? '(seleccionada)' : ''}`}
