@@ -24,6 +24,11 @@ export function cleanAvatar(avatar: string): string {
   return avatar.replace(/[\u2640\u2642\uFE0F\u200D]/g, '').trim()
 }
 
+// Returns the base face character without skin-tone modifiers so two identical or near-identical faces never appear in the same round
+function getBaseFace(avatar: string): string {
+  return cleanAvatar(avatar).replace(/[\u{1F3FB}-\u{1F3FF}]/gu, '').trim()
+}
+
 // Unbiased Fisher-Yates shuffle
 function shuffle<T>(array: T[]): T[] {
   const result = [...array]
@@ -284,7 +289,23 @@ const PEOPLE_DATABASE: Person[] = [
 ]
 
 function getInitialTargets(): Person[] {
-  return shuffle(PEOPLE_DATABASE).slice(0, 3)
+  const shuffled = shuffle(PEOPLE_DATABASE)
+  const selected: Person[] = []
+  const usedBaseFaces = new Set<string>()
+  const usedAvatars = new Set<string>()
+
+  for (const person of shuffled) {
+    const baseFace = getBaseFace(person.avatar)
+    const exactAvatar = cleanAvatar(person.avatar)
+    if (!usedBaseFaces.has(baseFace) && !usedAvatars.has(exactAvatar)) {
+      usedBaseFaces.add(baseFace)
+      usedAvatars.add(exactAvatar)
+      selected.push(person)
+      if (selected.length === 3) break
+    }
+  }
+
+  return selected
 }
 
 export function FacesAndNames({ onComplete, onExit }: Props) {
@@ -381,9 +402,35 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
     if (!target) return
 
     const choiceCount = round === 0 ? 4 : round === 1 ? 6 : 9
-    const poolWithoutTarget = PEOPLE_DATABASE.filter((p) => p.id !== target.id)
-    const shuffledDistractors = shuffle(poolWithoutTarget)
-    const distractors = shuffledDistractors.slice(0, choiceCount - 1)
+    const poolWithoutTarget = shuffle(PEOPLE_DATABASE.filter((p) => p.id !== target.id))
+
+    const usedBaseFaces = new Set<string>([getBaseFace(target.avatar)])
+    const usedExactAvatars = new Set<string>([cleanAvatar(target.avatar)])
+    const distractors: Person[] = []
+
+    // First pass: guarantee every face in the round has a distinct base face AND distinct avatar
+    for (const candidate of poolWithoutTarget) {
+      if (distractors.length >= choiceCount - 1) break
+      const baseFace = getBaseFace(candidate.avatar)
+      const exactAvatar = cleanAvatar(candidate.avatar)
+      if (!usedBaseFaces.has(baseFace) && !usedExactAvatars.has(exactAvatar)) {
+        usedBaseFaces.add(baseFace)
+        usedExactAvatars.add(exactAvatar)
+        distractors.push(candidate)
+      }
+    }
+
+    // Fallback pass if needed: still strictly forbid any duplicate avatar in the same round
+    if (distractors.length < choiceCount - 1) {
+      for (const candidate of poolWithoutTarget) {
+        if (distractors.length >= choiceCount - 1) break
+        const exactAvatar = cleanAvatar(candidate.avatar)
+        if (!usedExactAvatars.has(exactAvatar) && !distractors.some((d) => d.id === candidate.id)) {
+          usedExactAvatars.add(exactAvatar)
+          distractors.push(candidate)
+        }
+      }
+    }
 
     // Guarantee that target does not land in the exact same slot index as in the previous round
     const allSlots = Array.from({ length: choiceCount }, (_, i) => i)
