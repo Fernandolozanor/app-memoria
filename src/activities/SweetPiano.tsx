@@ -289,10 +289,10 @@ export function SweetPiano({ onComplete, onExit }: Props) {
           </div>
         </div>
 
-        {/* Piano Keys: Wide full-screen rows (3 rows in rounds 1-3, 4 rows in round 4) */}
+        {/* Piano Keys: Side-by-side horizontal layout (3 columns in rounds 1-3, 4 columns in round 4) */}
         <div
-          className={`grid grid-cols-1 gap-2.5 sm:gap-4 w-full flex-1 min-h-0 items-stretch ${
-            currentRound === 4 ? 'grid-rows-4' : 'grid-rows-3'
+          className={`grid grid-rows-1 gap-2 sm:gap-4 w-full flex-1 min-h-0 items-stretch ${
+            currentRound === 4 ? 'grid-cols-4' : 'grid-cols-3'
           }`}
         >
           {visibleKeys.map((k) => {
@@ -302,15 +302,15 @@ export function SweetPiano({ onComplete, onExit }: Props) {
                 key={k.id}
                 disabled={isPlayingSeq}
                 onClick={() => handleKeyPress(k.id)}
-                className={`min-w-0 w-full h-full min-h-0 rounded-2xl sm:rounded-3xl border-3 sm:border-4 transition-all duration-150 flex flex-row items-center justify-between px-6 sm:px-10 cursor-pointer shadow-sm sm:shadow-lg active:scale-[0.98] ${
+                className={`min-w-0 w-full h-full min-h-0 rounded-2xl sm:rounded-3xl border-3 sm:border-4 transition-all duration-150 flex flex-col items-center justify-center gap-2 sm:gap-4 px-1.5 sm:px-4 overflow-hidden cursor-pointer shadow-sm sm:shadow-lg active:scale-[0.98] ${
                   isLit ? k.activeColor : `${k.color} opacity-95 hover:opacity-100`
                 }`}
                 aria-label={`Tecla ${k.noteName} ${k.label}`}
               >
-                <span className="text-4xl sm:text-6xl font-black tracking-wide">
+                <span className="text-3xl sm:text-6xl font-black tracking-wide leading-none">
                   {k.noteName}
                 </span>
-                <span className="font-black text-2xl sm:text-4xl uppercase tracking-wide">
+                <span className="font-black text-sm sm:text-2xl uppercase tracking-tight sm:tracking-wide text-center leading-tight w-full truncate">
                   {k.label}
                 </span>
               </button>

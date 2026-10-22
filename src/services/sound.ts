@@ -4,6 +4,17 @@
 class SoundService {
   private ctx: AudioContext | null = null
 
+  constructor() {
+    if (typeof window !== 'undefined') {
+      const unlock = () => {
+        this.getContext()
+      }
+      window.addEventListener('pointerdown', unlock, { passive: true })
+      window.addEventListener('touchstart', unlock, { passive: true })
+      window.addEventListener('click', unlock, { passive: true })
+    }
+  }
+
   private getContext(): AudioContext | null {
     if (typeof window === 'undefined') return null
     if (!this.ctx) {
