@@ -1,15 +1,11 @@
 import { useState } from 'react'
-import type { ActivityId, UserStats } from './types'
+import type { ActivityId } from './types'
 import { ACTIVITIES } from './data/activities'
-import {
-  loadUserStats,
-  recordActivityCompletion,
-} from './services/storage'
+import { recordActivityCompletion } from './services/storage'
 import { sound } from './services/sound'
 import { speech } from './services/speech'
 import { Header } from './components/Header'
 import { ActivityCard } from './components/ActivityCard'
-import { VoiceModal } from './components/VoiceModal'
 
 // Import all 10 activities
 import { ShoppingList } from './activities/ShoppingList'
@@ -26,8 +22,6 @@ import { DailyCoins } from './activities/DailyCoins'
 export function App() {
   const initialActivity = (new URLSearchParams(window.location.search).get('activity') as ActivityId) || null
   const [currentActivity, setCurrentActivity] = useState<ActivityId | null>(initialActivity)
-  const [stats, setStats] = useState<UserStats>(loadUserStats)
-  const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false)
 
   const handleSelectActivity = (id: ActivityId) => {
     setCurrentActivity(id)
@@ -35,8 +29,7 @@ export function App() {
   }
 
   const handleCompleteActivity = (id: ActivityId) => {
-    const updated = recordActivityCompletion(id, 1)
-    setStats(updated)
+    recordActivityCompletion(id, 1)
   }
 
   const handleBackToMenu = () => {
@@ -55,8 +48,6 @@ export function App() {
         title={activeActivityMeta ? activeActivityMeta.title : undefined}
         subtitle={activeActivityMeta ? activeActivityMeta.subtitle : undefined}
         onBack={currentActivity ? handleBackToMenu : undefined}
-        stars={stats.stars}
-        onOpenVoiceModal={() => setIsVoiceModalOpen(true)}
       />
 
       {/* Main Container - 100% full height zero-scroll on mobile, smoothly adaptable on tablet/desktop */}
@@ -148,9 +139,6 @@ export function App() {
           </div>
         )}
       </main>
-
-      {/* Voice Selection Modal */}
-      <VoiceModal isOpen={isVoiceModalOpen} onClose={() => setIsVoiceModalOpen(false)} />
     </div>
   )
 }
