@@ -294,13 +294,13 @@ export function DailyCoins({ onComplete, onExit }: Props) {
   // Realistic visual styling for Euro coins with high contrast and tactile borders
   const getCoinVisual = (coin: CoinInstance, isTaken: boolean) => {
     const baseClasses =
-      'relative flex flex-row items-center justify-center gap-2 sm:gap-4 rounded-2xl sm:rounded-3xl font-black select-none transition-all duration-200 cursor-pointer shadow-xs sm:shadow-md px-2 sm:px-4 overflow-hidden'
+      'relative flex flex-row items-center justify-start sm:justify-center gap-2.5 sm:gap-4 rounded-2xl sm:rounded-3xl font-black select-none transition-all duration-200 cursor-pointer shadow-sm sm:shadow-md px-2.5 sm:px-5 py-1 overflow-hidden'
 
     if (isTaken) {
       return (
-        <div className="w-full h-full min-h-0 rounded-2xl sm:rounded-3xl border-2 sm:border-3 border-dashed border-stone-300 bg-stone-100 flex flex-row items-center justify-center gap-1.5 text-stone-400 px-2 overflow-hidden">
-          <span className="text-xs sm:text-xl font-bold truncate">✓ Puesta:</span>
-          <span className="text-sm sm:text-2xl font-black opacity-60 shrink-0">{coin.label}</span>
+        <div className="w-full h-full min-h-0 rounded-2xl sm:rounded-3xl border-3 border-dashed border-stone-300 bg-stone-100 flex flex-row items-center justify-center gap-2 text-stone-400 px-3 overflow-hidden">
+          <span className="text-base sm:text-2xl font-bold truncate">✓ Puesta:</span>
+          <span className="text-xl sm:text-3xl font-black opacity-70 shrink-0">{coin.label}</span>
         </div>
       )
     }
@@ -309,115 +309,115 @@ export function DailyCoins({ onComplete, onExit }: Props) {
       case '2e':
         return (
           <div
-            className={`${baseClasses} w-full h-full min-h-0 bg-gradient-to-br from-stone-200 via-stone-300 to-stone-400 border-2 sm:border-4 border-amber-500 hover:border-amber-600 active:scale-95`}
+            className={`${baseClasses} w-full h-full min-h-0 bg-gradient-to-br from-stone-200 via-stone-300 to-stone-400 border-3 sm:border-4 border-amber-500 hover:border-amber-600 active:scale-95`}
           >
-            <div className="w-8 h-8 sm:w-14 sm:h-14 shrink-0 rounded-full bg-gradient-to-br from-amber-300 to-amber-500 border-2 border-amber-600 flex items-center justify-center shadow-inner">
-              <span className="text-amber-950 text-sm sm:text-3xl font-black">2€</span>
+            <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 shrink-0 rounded-full bg-gradient-to-br from-amber-300 to-amber-500 border-3 sm:border-4 border-amber-600 ring-2 sm:ring-4 ring-stone-300 flex items-center justify-center shadow-md">
+              <span className="text-amber-950 text-xl sm:text-3xl md:text-4xl font-black tracking-tighter">2€</span>
             </div>
-            <span className="text-stone-950 font-black text-sm sm:text-2xl truncate">2 Euros</span>
+            <span className="text-stone-950 font-black text-xl sm:text-3xl md:text-4xl leading-tight text-left">2 Euros</span>
           </div>
         )
       case '1e':
         return (
           <div
-            className={`${baseClasses} w-full h-full min-h-0 bg-gradient-to-br from-amber-300 via-amber-400 to-amber-500 border-2 sm:border-4 border-stone-400 hover:border-stone-600 active:scale-95`}
+            className={`${baseClasses} w-full h-full min-h-0 bg-gradient-to-br from-amber-300 via-amber-400 to-amber-500 border-3 sm:border-4 border-stone-400 hover:border-stone-600 active:scale-95`}
           >
-            <div className="w-8 h-8 sm:w-14 sm:h-14 shrink-0 rounded-full bg-gradient-to-br from-stone-100 to-stone-300 border-2 border-stone-400 flex items-center justify-center shadow-inner">
-              <span className="text-stone-900 text-sm sm:text-3xl font-black">1€</span>
+            <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 shrink-0 rounded-full bg-gradient-to-br from-stone-100 to-stone-300 border-3 sm:border-4 border-stone-500 ring-2 sm:ring-4 ring-amber-400 flex items-center justify-center shadow-md">
+              <span className="text-stone-900 text-xl sm:text-3xl md:text-4xl font-black tracking-tighter">1€</span>
             </div>
-            <span className="text-amber-950 font-black text-sm sm:text-2xl truncate">1 Euro</span>
+            <span className="text-amber-950 font-black text-xl sm:text-3xl md:text-4xl leading-tight text-left">1 Euro</span>
           </div>
         )
       case '50c':
         return (
           <div
-            className={`${baseClasses} w-full h-full min-h-0 bg-gradient-to-br from-amber-200 via-amber-300 to-amber-400 border-2 sm:border-4 border-amber-600 hover:border-amber-700 active:scale-95`}
+            className={`${baseClasses} w-full h-full min-h-0 bg-gradient-to-br from-amber-200 via-amber-300 to-amber-400 border-3 sm:border-4 border-amber-600 hover:border-amber-700 active:scale-95`}
           >
-            <div className="w-8 h-8 sm:w-14 sm:h-14 shrink-0 rounded-full bg-amber-100 border-2 border-amber-500 flex items-center justify-center shadow-inner">
-              <span className="text-amber-950 text-xs sm:text-2xl font-black">50c</span>
+            <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 shrink-0 rounded-full bg-gradient-to-br from-amber-100 to-amber-300 border-3 sm:border-4 border-amber-600 flex items-center justify-center shadow-md">
+              <span className="text-amber-950 text-lg sm:text-2xl md:text-3xl font-black tracking-tighter">50c</span>
             </div>
-            <span className="text-amber-950 font-black text-sm sm:text-2xl truncate">50 céntimos</span>
+            <span className="text-amber-950 font-black text-lg sm:text-3xl md:text-4xl leading-none text-left">50 céntimos</span>
           </div>
         )
       case '20c':
         return (
           <div
-            className={`${baseClasses} w-full h-full min-h-0 bg-gradient-to-br from-amber-200 via-amber-300 to-amber-400 border-2 sm:border-4 border-amber-500 hover:border-amber-600 active:scale-95`}
+            className={`${baseClasses} w-full h-full min-h-0 bg-gradient-to-br from-amber-200 via-amber-300 to-amber-400 border-3 sm:border-4 border-amber-500 hover:border-amber-600 active:scale-95`}
           >
-            <div className="w-8 h-8 sm:w-14 sm:h-14 shrink-0 rounded-full bg-amber-100 border-2 border-amber-500 flex items-center justify-center shadow-inner">
-              <span className="text-amber-950 text-xs sm:text-2xl font-black">20c</span>
+            <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 shrink-0 rounded-full bg-gradient-to-br from-amber-100 to-amber-300 border-3 sm:border-4 border-amber-500 flex items-center justify-center shadow-md">
+              <span className="text-amber-950 text-lg sm:text-2xl md:text-3xl font-black tracking-tighter">20c</span>
             </div>
-            <span className="text-amber-950 font-black text-sm sm:text-2xl truncate">20 céntimos</span>
+            <span className="text-amber-950 font-black text-lg sm:text-3xl md:text-4xl leading-none text-left">20 céntimos</span>
           </div>
         )
       case '10c':
         return (
           <div
-            className={`${baseClasses} w-full h-full min-h-0 bg-gradient-to-br from-amber-200 via-amber-300 to-amber-400 border-2 sm:border-4 border-amber-500 hover:border-amber-600 active:scale-95`}
+            className={`${baseClasses} w-full h-full min-h-0 bg-gradient-to-br from-amber-200 via-amber-300 to-amber-400 border-3 sm:border-4 border-amber-500 hover:border-amber-600 active:scale-95`}
           >
-            <div className="w-8 h-8 sm:w-14 sm:h-14 shrink-0 rounded-full bg-amber-100 border-2 border-amber-500 flex items-center justify-center shadow-inner">
-              <span className="text-amber-950 text-xs sm:text-2xl font-black">10c</span>
+            <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 shrink-0 rounded-full bg-gradient-to-br from-amber-100 to-amber-300 border-3 sm:border-4 border-amber-500 flex items-center justify-center shadow-md">
+              <span className="text-amber-950 text-lg sm:text-2xl md:text-3xl font-black tracking-tighter">10c</span>
             </div>
-            <span className="text-amber-950 font-black text-sm sm:text-2xl truncate">10 céntimos</span>
+            <span className="text-amber-950 font-black text-lg sm:text-3xl md:text-4xl leading-none text-left">10 céntimos</span>
           </div>
         )
       case '5c':
       default:
         return (
           <div
-            className={`${baseClasses} w-full h-full min-h-0 bg-gradient-to-br from-orange-200 via-orange-300 to-orange-400 border-2 sm:border-4 border-orange-700 hover:border-orange-800 active:scale-95`}
+            className={`${baseClasses} w-full h-full min-h-0 bg-gradient-to-br from-orange-200 via-orange-300 to-orange-400 border-3 sm:border-4 border-orange-700 hover:border-orange-800 active:scale-95`}
           >
-            <div className="w-8 h-8 sm:w-14 sm:h-14 shrink-0 rounded-full bg-orange-100 border-2 border-orange-600 flex items-center justify-center shadow-inner">
-              <span className="text-orange-950 text-xs sm:text-2xl font-black">5c</span>
+            <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 shrink-0 rounded-full bg-gradient-to-br from-orange-100 to-orange-300 border-3 sm:border-4 border-orange-600 flex items-center justify-center shadow-md">
+              <span className="text-orange-950 text-lg sm:text-2xl md:text-3xl font-black tracking-tighter">5c</span>
             </div>
-            <span className="text-orange-950 font-black text-sm sm:text-2xl truncate">5 céntimos</span>
+            <span className="text-orange-950 font-black text-lg sm:text-3xl md:text-4xl leading-none text-left">5 céntimos</span>
           </div>
         )
     }
   }
 
   return (
-    <div className="flex-1 flex flex-col justify-between w-full max-w-3xl mx-auto overflow-hidden h-full">
+    <div className="flex-1 flex flex-col justify-between w-full max-w-4xl mx-auto overflow-hidden h-full">
       {/* Top Header Bar */}
-      <div className="flex items-center justify-center bg-white rounded-2xl sm:rounded-3xl p-2 sm:p-3.5 border-2 sm:border-3 border-lime-300 mb-1 sm:mb-3 shadow-xs shrink-0">
+      <div className="flex items-center justify-center bg-white rounded-2xl sm:rounded-3xl py-1.5 px-3 sm:p-3 border-2 sm:border-3 border-lime-300 mb-1 sm:mb-2 shadow-xs shrink-0">
         <div className="flex items-center gap-2 sm:gap-3">
-          <span className="font-black text-stone-900 text-base sm:text-2xl">Ronda:</span>
-          <span className="px-3 sm:px-4 py-1 sm:py-1.5 bg-lime-100 text-lime-950 font-black rounded-xl sm:rounded-2xl text-base sm:text-2xl">
+          <span className="font-black text-stone-900 text-lg sm:text-2xl">Ronda:</span>
+          <span className="px-3 sm:px-4 py-0.5 sm:py-1 bg-lime-100 text-lime-950 font-black rounded-xl sm:rounded-2xl text-lg sm:text-2xl">
             {roundIdx + 1} de 4 ({currentItem.requiredCoinCount} monedas)
           </span>
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col justify-between bg-white border-3 sm:border-4 border-lime-400 rounded-2xl sm:rounded-3xl p-2 sm:p-6 shadow-md text-center min-h-0 overflow-hidden">
+      <div className="flex-1 flex flex-col justify-between bg-white border-3 sm:border-4 border-lime-400 rounded-2xl sm:rounded-3xl p-2 sm:p-5 shadow-md text-center min-h-0 overflow-hidden">
         {/* Article title & emoji */}
-        <div className="flex items-center justify-center gap-2.5 mb-0.5 sm:mb-2 shrink-0">
+        <div className="flex items-center justify-center gap-2.5 mb-0.5 sm:mb-1.5 shrink-0">
           <span className="text-4xl sm:text-6xl" aria-hidden="true">
             {currentItem.emoji}
           </span>
-          <h3 className="text-xl sm:text-3xl font-black text-stone-950 leading-tight">
+          <h3 className="text-2xl sm:text-4xl font-black text-stone-950 leading-tight">
             {currentItem.name}
           </h3>
         </div>
 
         {/* Goal badge */}
-        <div className="inline-flex flex-wrap items-center justify-center gap-2 sm:gap-4 bg-lime-100 border-2 sm:border-3 border-lime-400 text-lime-950 px-3 sm:px-8 py-1.5 sm:py-3 rounded-xl sm:rounded-3xl my-0.5 sm:my-2 shrink-0 mx-auto">
-          <span className="text-base sm:text-2xl font-bold">Precio a pagar:</span>
-          <span className="text-2xl sm:text-4xl font-black">{currentItem.priceLabel}</span>
-          <span className="text-sm sm:text-xl font-black bg-white px-2.5 sm:px-3 py-0.5 sm:py-1.5 rounded-lg border border-lime-300 text-lime-900">
+        <div className="inline-flex flex-wrap items-center justify-center gap-2 sm:gap-4 bg-lime-100 border-2 sm:border-3 border-lime-400 text-lime-950 px-3 sm:px-6 py-1 sm:py-2.5 rounded-xl sm:rounded-3xl my-0.5 sm:my-1.5 shrink-0 mx-auto">
+          <span className="text-lg sm:text-2xl font-bold">Precio a pagar:</span>
+          <span className="text-3xl sm:text-5xl font-black">{currentItem.priceLabel}</span>
+          <span className="text-base sm:text-2xl font-black bg-white px-2.5 sm:px-4 py-0.5 sm:py-1 rounded-lg border-2 border-lime-300 text-lime-900">
             en {currentItem.requiredCoinCount} monedas
           </span>
         </div>
 
         {/* The Tray (Mostrador de pago) */}
-        <div className="my-1 sm:my-3 p-1.5 sm:p-3 rounded-xl sm:rounded-2xl bg-stone-100 border-2 sm:border-3 border-stone-300 flex flex-col items-center gap-1 sm:gap-2 shadow-inner shrink-0">
+        <div className="my-1 sm:my-2 p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-stone-100 border-2 sm:border-3 border-stone-300 flex flex-col items-center gap-1 sm:gap-2 shadow-inner shrink-0">
           <div className="flex items-center justify-between gap-2 w-full">
-            <div className="text-left flex items-center gap-1 sm:gap-2">
-              <ShoppingBag className="w-4 h-4 sm:w-6 sm:h-6 text-lime-700 stroke-[2.5]" />
-              <span className="text-xs sm:text-lg font-bold text-stone-700">Llevas:</span>
-              <span className="text-base sm:text-2xl font-black text-stone-950">
+            <div className="text-left flex items-center gap-1.5 sm:gap-2.5">
+              <ShoppingBag className="w-5 h-5 sm:w-7 sm:h-7 text-lime-700 stroke-[2.5]" />
+              <span className="text-base sm:text-2xl font-bold text-stone-700">Llevas:</span>
+              <span className="text-xl sm:text-3xl font-black text-stone-950">
                 {formatCents(currentTotalCents)}
               </span>
-              <span className="text-xs sm:text-base font-bold text-stone-600">
+              <span className="text-sm sm:text-xl font-bold text-stone-600">
                 ({currentCoinCount}/{currentItem.requiredCoinCount})
               </span>
             </div>
@@ -425,9 +425,9 @@ export function DailyCoins({ onComplete, onExit }: Props) {
             {selectedCoins.length > 0 && (
               <button
                 onClick={handleResetCoins}
-                className="inline-flex items-center gap-1 px-2.5 sm:px-4 py-1 bg-amber-200 hover:bg-amber-300 text-amber-950 font-black text-xs sm:text-lg rounded-lg sm:rounded-xl border border-amber-400 cursor-pointer transition-all active:scale-95"
+                className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-1 sm:py-1.5 bg-amber-200 hover:bg-amber-300 text-amber-950 font-black text-sm sm:text-xl rounded-lg sm:rounded-xl border-2 border-amber-400 cursor-pointer transition-all active:scale-95"
               >
-                <RotateCcw className="w-3.5 h-3.5 sm:w-5 sm:h-5 stroke-[2.5]" />
+                <RotateCcw className="w-4 h-4 sm:w-6 sm:h-6 stroke-[2.5]" />
                 <span>Borrar</span>
               </button>
             )}
@@ -435,12 +435,12 @@ export function DailyCoins({ onComplete, onExit }: Props) {
 
           {/* Visual coin chips on tray */}
           {selectedCoins.length > 0 ? (
-            <div className="flex flex-wrap gap-1 sm:gap-2 justify-center w-full pt-1 border-t border-stone-200">
+            <div className="flex flex-wrap gap-1.5 sm:gap-2.5 justify-center w-full pt-1 border-t border-stone-200">
               {selectedCoins.map((coin) => (
                 <button
                   key={coin.instanceId}
                   onClick={() => handleRemoveCoin(coin.instanceId)}
-                  className="px-2.5 sm:px-4 py-0.5 sm:py-1.5 bg-amber-200 hover:bg-rose-200 text-amber-950 hover:text-rose-950 rounded-full font-black text-xs sm:text-lg border border-amber-400 hover:border-rose-400 shadow-xs transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
+                  className="px-3 sm:px-5 py-1 sm:py-1.5 bg-amber-200 hover:bg-rose-200 text-amber-950 hover:text-rose-950 rounded-full font-black text-base sm:text-2xl border-2 border-amber-400 hover:border-rose-400 shadow-xs transition-all cursor-pointer flex items-center gap-2 active:scale-95"
                   title="Toca para quitar del mostrador"
                 >
                   <span>🪙 {coin.label}</span>
@@ -449,7 +449,7 @@ export function DailyCoins({ onComplete, onExit }: Props) {
               ))}
             </div>
           ) : (
-            <p className="text-stone-500 font-bold text-xs sm:text-base pt-0.5">
+            <p className="text-stone-600 font-bold text-sm sm:text-xl pt-0.5">
               (Mostrador vacío. Elige {currentItem.requiredCoinCount} monedas de abajo)
             </p>
           )}
@@ -457,13 +457,13 @@ export function DailyCoins({ onComplete, onExit }: Props) {
 
         {/* Feedback message banner */}
         {feedback && (
-          <div className="p-1.5 sm:p-3 rounded-xl sm:rounded-2xl bg-amber-100 border-2 border-amber-400 text-amber-950 font-black text-xs sm:text-xl mb-1 sm:mb-3 animate-in fade-in shrink-0">
+          <div className="p-1.5 sm:p-3 rounded-xl sm:rounded-2xl bg-amber-100 border-2 border-amber-400 text-amber-950 font-black text-sm sm:text-2xl mb-1 sm:mb-2 animate-in fade-in shrink-0">
             {feedback}
           </div>
         )}
 
         {/* Table with ALWAYS 10 coins in 2 wide columns x 5 rows filling the screen */}
-        <div className="grid grid-cols-2 grid-rows-5 gap-1.5 sm:gap-3 flex-1 min-h-0 w-full items-stretch">
+        <div className="grid grid-cols-2 grid-rows-5 gap-2 sm:gap-3 flex-1 min-h-0 w-full items-stretch">
           {tableCoins.map((coin) => {
             const isTaken = selectedCoins.some((c) => c.instanceId === coin.instanceId)
             return (
