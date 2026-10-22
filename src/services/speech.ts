@@ -41,8 +41,96 @@ const NOVELTY_VOICES = [
   'eddy',
 ]
 
-const TEST_VOICE_PHRASE =
-  'Hola. Con esta voz leeré las instrucciones y te acompañaré en cada juego. ¿Te gusta cómo suena?'
+const CATEGORIES_LIST = [
+  'las frutas',
+  'los animales',
+  'los medios de transporte',
+  'las prendas de ropa',
+  'las herramientas',
+  'los muebles de la casa',
+  'los instrumentos musicales',
+  'las flores y plantas',
+  'los utensilios de cocina',
+  'las partes del cuerpo',
+  'los fenómenos del tiempo',
+  'el material escolar',
+  'los deportes',
+  'los postres y dulces',
+  'los electrodomésticos',
+]
+
+const WHERE_ITEMS_LIST = [
+  { key: 'las-gafas', name: 'las gafas' },
+  { key: 'las-llaves', name: 'las llaves' },
+  { key: 'el-monedero', name: 'el monedero' },
+  { key: 'el-reloj', name: 'el reloj' },
+  { key: 'el-libro', name: 'el libro' },
+  { key: 'la-taza-de-cafe', name: 'la taza de café' },
+  { key: 'el-telefono', name: 'el teléfono' },
+  { key: 'el-paraguas', name: 'el paraguas' },
+  { key: 'la-libreta', name: 'la libreta' },
+  { key: 'la-cartera', name: 'la cartera' },
+  { key: 'el-anillo', name: 'el anillo' },
+  { key: 'el-pastillero', name: 'el pastillero' },
+  { key: 'el-sombrero', name: 'el sombrero' },
+  { key: 'la-radio', name: 'la radio' },
+  { key: 'las-tijeras', name: 'las tijeras' },
+  { key: 'la-vela', name: 'la vela' },
+  { key: 'la-campana', name: 'la campana' },
+  { key: 'la-guitarra', name: 'la guitarra' },
+  { key: 'el-regalo', name: 'el regalo' },
+  { key: 'la-carta', name: 'la carta' },
+  { key: 'los-zapatos', name: 'los zapatos' },
+  { key: 'la-flor', name: 'la flor' },
+  { key: 'la-manzana', name: 'la manzana' },
+  { key: 'el-pan', name: 'el pan' },
+  { key: 'el-queso', name: 'el queso' },
+  { key: 'la-camara', name: 'la cámara' },
+  { key: 'la-linterna', name: 'la linterna' },
+  { key: 'el-peine', name: 'el peine' },
+]
+
+const PEOPLE_LIST = [
+  'Carmen',
+  'Manuel',
+  'Teresa',
+  'Francisco',
+  'Pilar',
+  'José',
+  'Dolores',
+  'Rafael',
+  'Aïcha',
+  'Mamadou',
+  'Mercedes',
+  'Antonio',
+  'Pedro',
+  'Isabel',
+  'Javier',
+  'Fátima',
+  'Amadou',
+  'Marta',
+  'Carlos',
+  'Rosa',
+  'Kenji',
+  'Mei',
+  'Samuel',
+  'Lucía',
+  'David',
+  'Elena',
+  'Alberto',
+  'Clara',
+  'Lucas',
+  'Mariama',
+]
+
+function slugifyKey(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+}
 
 class SpeechService {
   private synth: SpeechSynthesis | null = null
@@ -57,10 +145,17 @@ class SpeechService {
   private audioCtx: AudioContext | null = null
   private activeSource: AudioBufferSourceNode | null = null
   private activeHtmlAudio: HTMLAudioElement | null = null
-  private cloudAudioCache = new Map<string, string>() // text -> base64 mp3 data
-  private prewarmedCloud = false
+  private staticBufferCache = new Map<string, AudioBuffer>()
 
   constructor() {
+    if (typeof window !== 'undefined') {
+      const unlock = () => {
+        this.getAudioContext()
+      }
+      window.addEventListener('pointerdown', unlock, { passive: true })
+      window.addEventListener('touchstart', unlock, { passive: true })
+      window.addEventListener('click', unlock, { passive: true })
+    }
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       this.synth = window.speechSynthesis
       this.initVoices()
@@ -288,57 +383,365 @@ class SpeechService {
     })
 
     // Ensure there is ALWAYS a genuine, warm, gentle male voice option ("Carlos")
-    const hasMale = result.some((p) => p.gender === 'M')
-    if (!hasMale) {
+    // Served from local static MP3 assets so it works 100% on iPhone & Spanish 5G without ever falling back to female TTS
+    const existingCarlosIdx = result.findIndex((p) => p.id === 'carlos' || p.id === 'carlos-male')
+    if (existingCarlosIdx !== -1) {
+      result[existingCarlosIdx].useCloudMale = true
+    } else {
       result.push({
         id: 'carlos-male',
         title: 'Carlos',
         tag: 'Voz de hombre suave, amable y agradable',
         gender: 'M',
-        voice: result.length > 0 ? result[0].voice : null,
-        pitch: 0.75,
-        rate: 0.88,
+        voice: null,
+        pitch: 0.92,
+        rate: 0.90,
         useCloudMale: true,
       })
-      this.prewarmCloudMaleVoice()
     }
 
     return result
   }
 
-  private prewarmCloudMaleVoice() {
-    if (this.prewarmedCloud || typeof window === 'undefined') return
-    this.prewarmedCloud = true
-    const chunks = this.splitIntoChunks(TEST_VOICE_PHRASE)
-    for (const c of chunks) {
-      this.fetchCloudMaleBase64(c.text).catch(() => {
-        // ignore prewarm network errors
-      })
+  private resolveCarlosStaticAudio(rawText: string): string {
+    const t = rawText.toLowerCase().trim()
+
+    // 1. Voice modal test
+    if (t.includes('leeré las instrucciones') || t.includes('te gusta cómo suena')) {
+      return 'test-voice'
     }
-  }
 
-  private async fetchCloudMaleBase64(text: string): Promise<string | null> {
-    const key = text.trim()
-    if (!key) return null
-    const cached = this.cloudAudioCache.get(key)
-    if (cached) return cached
+    // 2. Celebrations
+    if (t.includes('compra completada')) return 'celebration-shopping'
+    if (t.includes('todas las parejas con gran memoria')) return 'celebration-pairs'
+    if (t.includes('todos los refranes populares')) return 'celebration-sayings'
+    if (t.includes('objeto diferente superando')) return 'celebration-spot'
+    if (t.includes('todos los intrusos')) return 'celebration-odd'
+    if (t.includes('posición de los objetos')) return 'celebration-where'
+    if (t.includes('rondas del piano')) return 'celebration-piano'
+    if (t.includes('gran organización')) return 'celebration-steps'
+    if (t.includes('todas las caras con gran agudeza')) return 'celebration-faces'
+    if (t.includes('cuentas perfectas')) return 'celebration-coins'
+    if (t.includes('has completado')) return 'celebration-default'
 
-    try {
-      const res = await fetch('https://tiktok-tts.weilnet.workers.dev/api/generation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: key, voice: 'es_002' }),
-      })
-      if (!res.ok) return null
-      const json = await res.json()
-      if (json && json.success && typeof json.data === 'string' && json.data.length > 0) {
-        this.cloudAudioCache.set(key, json.data)
-        return json.data
+    // 3. Sweet Piano
+    if (t.includes('ronda 1') && t.includes('nota')) return 'piano-r1'
+    if (t.includes('ronda 2') && t.includes('notas')) return 'piano-r2'
+    if (t.includes('ronda 3') && t.includes('notas')) return 'piano-r3'
+    if (t.includes('ronda 4') && t.includes('verde')) return 'piano-r4'
+    if (
+      t.includes('tu turno') ||
+      t.includes('te toca') ||
+      t.includes('repite la melodía') ||
+      t.includes('toca las teclas')
+    ) {
+      return 'piano-turn'
+    }
+    if (
+      t.includes('oído musical') ||
+      t.includes('sonado a gloria') ||
+      t.includes('clavado la melodía') ||
+      t.includes('gran músico') ||
+      t.includes('nota por nota')
+    ) {
+      return 'piano-success'
+    }
+    if (
+      t.includes('escucha de nuevo la melodía') ||
+      t.includes('escucha otra vez con atención') ||
+      t.includes('vuelve a escuchar las notas') ||
+      t.includes('sonar otra vez')
+    ) {
+      return 'piano-retry'
+    }
+
+    // 4. Spot Object
+    if (t.includes('6 tarjetas') && (t.includes('diferente') || t.includes('igual') || t.includes('distinto'))) {
+      return 'spot-intro-6'
+    }
+    if (t.includes('9 tarjetas') && (t.includes('diferente') || t.includes('igual') || t.includes('distinto'))) {
+      return 'spot-intro-9'
+    }
+    if (t.includes('12 tarjetas') && (t.includes('diferente') || t.includes('igual') || t.includes('distinto'))) {
+      return 'spot-intro-12'
+    }
+    if (
+      t.includes('dónde estaba el objeto diferente') ||
+      t.includes('cuál era el dibujo distinto') ||
+      t.includes('en qué tarjeta estaba el que no era igual') ||
+      t.includes('dónde estaba el dibujo diferente')
+    ) {
+      return 'spot-guessing'
+    }
+    if (
+      t.includes('ahí estaba el diferente') ||
+      t.includes('no cuadraba con los demás') ||
+      t.includes('vista de lince') ||
+      t.includes('encontrado el dibujo diferente') ||
+      t.includes('al instante')
+    ) {
+      return 'spot-correct'
+    }
+    if (
+      t.includes('no era la diferente') ||
+      t.includes('no estaba el distinto') ||
+      t.includes('igual que las otras') ||
+      t.includes('dibujo se repite')
+    ) {
+      return 'spot-wrong'
+    }
+
+    // 5. Memory Pairs
+    if (
+      t.includes('parejas de dibujos iguales') ||
+      t.includes('dos cosas iguales') ||
+      t.includes('dónde están las parejas') ||
+      t.includes('emparejar las cartas')
+    ) {
+      return 'pairs-intro'
+    }
+    if (
+      t.includes('todas las parejas') ||
+      t.includes('completado todas las parejas') ||
+      t.includes('tablero completado')
+    ) {
+      return 'pairs-all'
+    }
+    if (
+      t.includes('encontrado la pareja') ||
+      t.includes('otra pareja') ||
+      t.includes('ya tienes') ||
+      t.includes('pareja de')
+    ) {
+      return 'pairs-found'
+    }
+
+    // 6. Shopping List
+    if (t.includes('recuerda estos 2 alimentos')) return 'shop-mem-2'
+    if (t.includes('recuerda estos 3 alimentos')) return 'shop-mem-3'
+    if (t.includes('grábate estos 4 alimentos') || t.includes('recuerda estos 4 alimentos')) {
+      return 'shop-mem-4'
+    }
+    if (t.includes('2 productos de la primera lista')) return 'shop-rec-2'
+    if (t.includes('3 productos de esta segunda lista')) return 'shop-rec-3'
+    if (t.includes('4 alimentos de esta última lista')) return 'shop-rec-4'
+    if (
+      t.includes('primera compra lista') ||
+      t.includes('segunda lista completada') ||
+      t.includes('has recordado las tres listas')
+    ) {
+      return 'shop-round-ok'
+    }
+    if (
+      t.includes('no estaba en la lista') ||
+      t.includes('no nos hacía falta') ||
+      t.includes('no tocaba comprarlo') ||
+      t.includes('no venía apuntado')
+    ) {
+      return 'shop-wrong'
+    }
+    if (t.startsWith('¡muy bien,')) return 'shop-item-ok'
+
+    // 7. Odd One Out
+    if (
+      t.includes('no pertenece') ||
+      t.includes('intruso') ||
+      t.includes('no tiene nada que ver') ||
+      t.includes('se ha colado') ||
+      t.includes('misma familia') ||
+      t.includes('sí pertenece') ||
+      t.includes('sí encaja') ||
+      t.includes('no encajaba con el resto')
+    ) {
+      if (
+        t.startsWith('¡correcto!') ||
+        t.startsWith('¡bien visto!') ||
+        t.startsWith('¡exacto!') ||
+        t.startsWith('¡lo cazaste!')
+      ) {
+        return 'odd-correct'
       }
-    } catch {
-      // Fallback if offline
+      if (t.includes('sí pertenece') || t.includes('misma familia') || t.includes('sí encaja')) {
+        return 'odd-wrong'
+      }
+      for (const cat of CATEGORIES_LIST) {
+        if (t.includes(cat)) {
+          return 'odd-intro-' + slugifyKey(cat)
+        }
+      }
+      return 'odd-correct'
     }
-    return null
+
+    // 8. Where Was It
+    if (t.includes('9 tarjetas') && t.includes('3')) return 'where-intro-9'
+    if (t.includes('12 tarjetas') && t.includes('4')) return 'where-intro-12'
+    if (t.includes('16 tarjetas') && t.includes('5')) return 'where-intro-16'
+    if (t.includes('3 objetos') || t.includes('3 casillas')) return 'where-show-3'
+    if (t.includes('4 objetos') || t.includes('4 casillas')) return 'where-show-4'
+    if (t.includes('5 objetos') || t.includes('5 casillas')) return 'where-show-5'
+    if (t.includes('¿dónde') || t.includes('en qué casilla') || t.includes('a ver esa memoria')) {
+      for (const it of WHERE_ITEMS_LIST) {
+        if (t.includes(it.name)) {
+          return 'where-guess-' + it.key
+        }
+      }
+    }
+    if (
+      t.includes('justo ahí estaba') ||
+      t.includes('justo ahí estaban') ||
+      t.includes('recordaste dónde') ||
+      t.includes('no se te escapa una')
+    ) {
+      return 'where-correct'
+    }
+    if (
+      t.includes('ahí no estaba') ||
+      t.includes('ahí no estaban') ||
+      t.includes('en esa casilla no') ||
+      t.includes('por ahí no') ||
+      t.includes('busca dónde estaba') ||
+      t.includes('busca dónde estaban')
+    ) {
+      return 'where-wrong'
+    }
+
+    // 9. Faces and Names
+    if (t.includes('pulsa jugar') || t.includes('botón de jugar') || t.includes('toca jugar')) {
+      return 'faces-play'
+    }
+    if (
+      t.includes('esa es la cara de') ||
+      t.includes('reconociste a') ||
+      t.includes('memoria para las caras')
+    ) {
+      return 'faces-correct'
+    }
+    if (
+      t.includes('esa cara es de') ||
+      t.includes('esa persona es') ||
+      t.includes('queremos encontrar a')
+    ) {
+      return 'faces-wrong'
+    }
+    if (
+      t.includes('¿quién es') ||
+      t.includes('¿dónde está la cara') ||
+      t.includes('¿reconoces a') ||
+      t.includes('busca la cara de')
+    ) {
+      for (const p of PEOPLE_LIST) {
+        if (t.includes(p.toLowerCase())) {
+          return 'faces-guess-' + slugifyKey(p)
+        }
+      }
+    }
+    if (
+      t.includes('rasgos') ||
+      t.includes('recuerda su cara') ||
+      t.includes('grábate su rostro') ||
+      t.includes('mírale bien')
+    ) {
+      for (const p of PEOPLE_LIST) {
+        if (t.includes(p.toLowerCase())) {
+          return 'faces-intro-' + slugifyKey(p)
+        }
+      }
+    }
+
+    // 10. Sayings
+    if (
+      (t.includes('refrán') &&
+        (t.includes('completa') ||
+          t.includes('suena') ||
+          t.includes('cómo sigue') ||
+          t.includes('oído muchas veces'))) ||
+      t.includes('dicho popular')
+    ) {
+      return 'sayings-intro'
+    }
+    if (
+      t.includes('sabiduría popular') ||
+      t.includes('al dedillo') ||
+      t.includes('lleno de razón') ||
+      t.includes('así se dice') ||
+      t.includes('bien dicho está')
+    ) {
+      return 'sayings-correct'
+    }
+    if (
+      t.includes('no rima con este refrán') ||
+      t.includes('la tradición dice otra cosa') ||
+      t.includes('no es el final de este dicho')
+    ) {
+      return 'sayings-wrong'
+    }
+
+    // 11. Step Order
+    if (
+      t.includes('primer lugar') ||
+      t.includes('primer paso') ||
+      t.includes('con qué empezamos')
+    ) {
+      return 'steps-first'
+    }
+    if (t.includes('paso número 2') || t.includes('paso 2')) return 'steps-next-2'
+    if (t.includes('paso número 3') || t.includes('paso 3')) return 'steps-next-3'
+    if (t.includes('paso número 4') || t.includes('paso 4')) return 'steps-next-4'
+    if (t.includes('paso número 5') || t.includes('paso 5')) return 'steps-next-5'
+    if (t.includes('qué paso toca') || t.includes('después de eso')) return 'steps-next-2'
+    if (
+      t.includes('bien ordenado') ||
+      t.includes('perfectamente organizados') ||
+      t.includes('cosas bien hechas') ||
+      t.includes('así es exactamente como se hace')
+    ) {
+      return 'steps-completed'
+    }
+    if (
+      t.includes('ese paso va más adelante') ||
+      t.includes('todavía no toca') ||
+      t.includes('antes de eso')
+    ) {
+      return 'steps-wrong'
+    }
+
+    // 12. Daily Coins
+    if (t.includes('junta exactamente 2 monedas')) return 'coins-intro-2'
+    if (t.includes('junta exactamente 3 monedas')) return 'coins-intro-3'
+    if (t.includes('junta exactamente 4 monedas')) return 'coins-intro-4'
+    if (t.includes('junta exactamente 5 monedas')) return 'coins-intro-5'
+    if (t.includes('ya tienes') && t.includes('monedas')) return 'coins-max'
+    if (
+      t.includes('pasado de precio') ||
+      t.includes('suma más de la cuenta') ||
+      t.includes('pasado del total')
+    ) {
+      return 'coins-over'
+    }
+    if (
+      t.includes('no dan el precio justo') ||
+      t.includes('no coincide exactamente') ||
+      t.includes('total no es el exacto')
+    ) {
+      return 'coins-wrong'
+    }
+    if (
+      t.includes('monedas retiradas') ||
+      t.includes('bandeja limpia') ||
+      t.includes('empezamos de nuevo con este producto')
+    ) {
+      return 'coins-reset'
+    }
+    if (
+      t.includes('importe exacto') ||
+      t.includes('clavado al céntimo') ||
+      t.includes('bien calculado') ||
+      t.includes('monedero funciona')
+    ) {
+      return 'coins-correct'
+    }
+
+    return 'celebration-default'
   }
 
   private getAudioContext(): AudioContext | null {
@@ -356,66 +759,89 @@ class SpeechService {
     return this.audioCtx
   }
 
-  private playBase64MaleAudio(base64Data: string, onDone: () => void, genId: number) {
+  private playStaticCarlosAudio(fileId: string, onDone: () => void, genId: number) {
     if (this.generationId !== genId) return
+    const url = `./audio/carlos/${fileId}.mp3`
 
     const ctx = this.getAudioContext()
-    if (ctx) {
-      try {
-        const binaryString = window.atob(base64Data)
-        const len = binaryString.length
-        const bytes = new Uint8Array(len)
-        for (let i = 0; i < len; i++) {
-          bytes[i] = binaryString.charCodeAt(i)
-        }
-        ctx.decodeAudioData(
-          bytes.buffer.slice(0),
-          (audioBuffer) => {
-            if (this.generationId !== genId) return
-            const source = ctx.createBufferSource()
-            source.buffer = audioBuffer
-            // Slightly slower playback (0.92) gives a softer, calmer, warmer baritone male voice
-            source.playbackRate.value = 0.92
-
-            // Gentle low-pass filter to soften high frequencies and make the voice warm and pleasant
-            const filter = ctx.createBiquadFilter()
-            filter.type = 'lowpass'
-            filter.frequency.value = 3600
-
-            const gainNode = ctx.createGain()
-            gainNode.gain.value = 0.95
-
-            source.connect(filter)
-            filter.connect(gainNode)
-            gainNode.connect(ctx.destination)
-
-            this.activeSource = source
-            source.onended = () => {
-              if (this.activeSource === source) {
-                this.activeSource = null
-              }
-              onDone()
-            }
-            source.start(0)
-          },
-          () => {
-            this.playFallbackHtmlAudio(base64Data, onDone, genId)
-          }
-        )
-        return
-      } catch {
-        // Fallback to HTMLAudioElement
-      }
+    const cachedBuffer = this.staticBufferCache.get(fileId)
+    if (ctx && cachedBuffer) {
+      this.startBufferSource(ctx, cachedBuffer, onDone, genId)
+      return
     }
 
-    this.playFallbackHtmlAudio(base64Data, onDone, genId)
+    if (ctx) {
+      fetch(url)
+        .then((res) => {
+          if (!res.ok) throw new Error('Audio fetch failed')
+          return res.arrayBuffer()
+        })
+        .then((arrayBuffer) => {
+          if (this.generationId !== genId) return
+          ctx.decodeAudioData(
+            arrayBuffer,
+            (audioBuffer) => {
+              this.staticBufferCache.set(fileId, audioBuffer)
+              if (this.generationId !== genId) return
+              this.startBufferSource(ctx, audioBuffer, onDone, genId)
+            },
+            () => {
+              this.playUrlWithHtmlAudio(url, onDone, genId)
+            }
+          )
+        })
+        .catch(() => {
+          this.playUrlWithHtmlAudio(url, onDone, genId)
+        })
+      return
+    }
+
+    this.playUrlWithHtmlAudio(url, onDone, genId)
   }
 
-  private playFallbackHtmlAudio(base64Data: string, onDone: () => void, genId: number) {
+  private startBufferSource(
+    ctx: AudioContext,
+    audioBuffer: AudioBuffer,
+    onDone: () => void,
+    genId: number
+  ) {
     if (this.generationId !== genId) return
     try {
-      const audio = new Audio(`data:audio/mp3;base64,${base64Data}`)
-      audio.playbackRate = 0.92
+      const source = ctx.createBufferSource()
+      source.buffer = audioBuffer
+      // Slightly slower playback (0.93) gives a softer, calmer, warmer baritone male voice
+      source.playbackRate.value = 0.93
+
+      // Gentle low-pass filter to soften high frequencies and make the voice warm and pleasant
+      const filter = ctx.createBiquadFilter()
+      filter.type = 'lowpass'
+      filter.frequency.value = 3600
+
+      const gainNode = ctx.createGain()
+      gainNode.gain.value = 0.95
+
+      source.connect(filter)
+      filter.connect(gainNode)
+      gainNode.connect(ctx.destination)
+
+      this.activeSource = source
+      source.onended = () => {
+        if (this.activeSource === source) {
+          this.activeSource = null
+        }
+        onDone()
+      }
+      source.start(0)
+    } catch {
+      onDone()
+    }
+  }
+
+  private playUrlWithHtmlAudio(url: string, onDone: () => void, genId: number) {
+    if (this.generationId !== genId) return
+    try {
+      const audio = new Audio(url)
+      audio.playbackRate = 0.93
       audio.preservesPitch = false
       this.activeHtmlAudio = audio
       audio.onended = () => {
@@ -450,9 +876,10 @@ class SpeechService {
     const legacyVoiceName =
       typeof localStorage !== 'undefined' ? localStorage.getItem('app_memoria_voice') : null
 
-    // 1. Respect user's saved profile ID
+    // 1. Respect user's saved profile ID (including legacy 'carlos' -> 'carlos-male')
     if (storedProfileId) {
-      const saved = this.profiles.find((p) => p.id === storedProfileId)
+      const normalizedId = storedProfileId === 'carlos' ? 'carlos-male' : storedProfileId
+      const saved = this.profiles.find((p) => p.id === normalizedId || p.id === storedProfileId)
       if (saved) {
         this.currentProfile = saved
         this.notify()
@@ -652,13 +1079,19 @@ class SpeechService {
     const activePitch = activeProfile ? activeProfile.pitch : 1.05
     const useCloudMale = Boolean(activeProfile && activeProfile.useCloudMale)
 
-    // Unlock Web Audio context on user gesture if using cloud male voice
+    // When Carlos (male voice) is selected, play the pre-generated static MP3 from our own server
+    // Never fall back to female SpeechSynthesis voices
     if (useCloudMale) {
-      this.getAudioContext()
-      // Start fetching all chunks in parallel immediately so there is no gap between sentences
-      chunks.forEach((c) => {
-        this.fetchCloudMaleBase64(c.text).catch(() => {})
-      })
+      const fileId = this.resolveCarlosStaticAudio(cleanedRaw)
+      this.playStaticCarlosAudio(
+        fileId,
+        () => {
+          if (this.generationId !== currentGen) return
+          if (onEnd) onEnd()
+        },
+        currentGen
+      )
+      return
     }
 
     let chunkIndex = 0
@@ -694,25 +1127,6 @@ class SpeechService {
           this.queueTimeoutId = null
           speakNextChunk()
         }, currentChunk.pauseAfterMs)
-      }
-
-      if (useCloudMale) {
-        this.fetchCloudMaleBase64(currentChunk.text).then((base64Audio) => {
-          if (this.generationId !== currentGen) return
-          if (base64Audio) {
-            this.playBase64MaleAudio(base64Audio, handleDone, currentGen)
-          } else {
-            // Offline fallback
-            this.speakChunkWithWebSpeech(
-              currentChunk.text,
-              activeVoice,
-              activeRate,
-              activePitch,
-              handleDone
-            )
-          }
-        })
-        return
       }
 
       this.speakChunkWithWebSpeech(
