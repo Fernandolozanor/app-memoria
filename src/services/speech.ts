@@ -11,9 +11,10 @@ export interface VoiceProfile {
   title: string
   tag: string
   gender: 'F' | 'M'
-  voice: SpeechSynthesisVoice
+  voice: SpeechSynthesisVoice | null
   pitch: number
   rate: number
+  useCloudMale?: boolean
 }
 
 const NOVELTY_VOICES = [
@@ -23,7 +24,7 @@ const NOVELTY_VOICES = [
   'rocko',
   'sandy',
   'shelley',
-  'Albert',
+  'albert',
   'bahh',
   'bells',
   'boing',
@@ -36,7 +37,12 @@ const NOVELTY_VOICES = [
   'whisper',
   'wobble',
   'zarvox',
+  'reed',
+  'eddy',
 ]
+
+const TEST_VOICE_PHRASE =
+  'Hola. Con esta voz leeré las instrucciones y te acompañaré en cada juego. ¿Te gusta cómo suena?'
 
 class SpeechService {
   private synth: SpeechSynthesis | null = null
@@ -48,6 +54,11 @@ class SpeechService {
   private lastSpokenText = ''
   private lastSpokenTime = 0
   private listeners: (() => void)[] = []
+  private audioCtx: AudioContext | null = null
+  private activeSource: AudioBufferSourceNode | null = null
+  private activeHtmlAudio: HTMLAudioElement | null = null
+  private cloudAudioCache = new Map<string, string>() // text -> base64 mp3 data
+  private prewarmedCloud = false
 
   constructor() {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -209,14 +220,6 @@ class SpeechService {
         gender: 'M',
       }
     }
-    if (n.includes('reed') || n.includes('eddy')) {
-      return {
-        key: 'carlos',
-        title: 'Carlos',
-        tag: 'Voz de hombre suave, amable y agradable',
-        gender: 'M',
-      }
-    }
 
     // Generic fallback cleaned up so duplicates with suffixes collapse into one key
     const cleanTitle = v.name
@@ -284,22 +287,151 @@ class SpeechService {
       return a.title.localeCompare(b.title, 'es')
     })
 
-    // Ensure there is ALWAYS at least one gentle, warm, pleasant male voice option
+    // Ensure there is ALWAYS a genuine, warm, gentle male voice option ("Carlos")
     const hasMale = result.some((p) => p.gender === 'M')
-    if (!hasMale && result.length > 0) {
-      const baseVoice = result[0].voice
+    if (!hasMale) {
       result.push({
         id: 'carlos-male',
         title: 'Carlos',
         tag: 'Voz de hombre suave, amable y agradable',
         gender: 'M',
-        voice: baseVoice,
-        pitch: 0.68, // Warm, natural male baritone pitch
-        rate: 0.88, // Calm, gentle, unhurried pace
+        voice: result.length > 0 ? result[0].voice : null,
+        pitch: 0.75,
+        rate: 0.88,
+        useCloudMale: true,
       })
+      this.prewarmCloudMaleVoice()
     }
 
     return result
+  }
+
+  private prewarmCloudMaleVoice() {
+    if (this.prewarmedCloud || typeof window === 'undefined') return
+    this.prewarmedCloud = true
+    const chunks = this.splitIntoChunks(TEST_VOICE_PHRASE)
+    for (const c of chunks) {
+      this.fetchCloudMaleBase64(c.text).catch(() => {
+        // ignore prewarm network errors
+      })
+    }
+  }
+
+  private async fetchCloudMaleBase64(text: string): Promise<string | null> {
+    const key = text.trim()
+    if (!key) return null
+    const cached = this.cloudAudioCache.get(key)
+    if (cached) return cached
+
+    try {
+      const res = await fetch('https://tiktok-tts.weilnet.workers.dev/api/generation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: key, voice: 'es_002' }),
+      })
+      if (!res.ok) return null
+      const json = await res.json()
+      if (json && json.success && typeof json.data === 'string' && json.data.length > 0) {
+        this.cloudAudioCache.set(key, json.data)
+        return json.data
+      }
+    } catch {
+      // Fallback if offline
+    }
+    return null
+  }
+
+  private getAudioContext(): AudioContext | null {
+    if (typeof window === 'undefined') return null
+    if (!this.audioCtx) {
+      const AudioCtx =
+        window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+      if (AudioCtx) {
+        this.audioCtx = new AudioCtx()
+      }
+    }
+    if (this.audioCtx && this.audioCtx.state === 'suspended') {
+      this.audioCtx.resume().catch(() => {})
+    }
+    return this.audioCtx
+  }
+
+  private playBase64MaleAudio(base64Data: string, onDone: () => void, genId: number) {
+    if (this.generationId !== genId) return
+
+    const ctx = this.getAudioContext()
+    if (ctx) {
+      try {
+        const binaryString = window.atob(base64Data)
+        const len = binaryString.length
+        const bytes = new Uint8Array(len)
+        for (let i = 0; i < len; i++) {
+          bytes[i] = binaryString.charCodeAt(i)
+        }
+        ctx.decodeAudioData(
+          bytes.buffer.slice(0),
+          (audioBuffer) => {
+            if (this.generationId !== genId) return
+            const source = ctx.createBufferSource()
+            source.buffer = audioBuffer
+            // Slightly slower playback (0.92) gives a softer, calmer, warmer baritone male voice
+            source.playbackRate.value = 0.92
+
+            // Gentle low-pass filter to soften high frequencies and make the voice warm and pleasant
+            const filter = ctx.createBiquadFilter()
+            filter.type = 'lowpass'
+            filter.frequency.value = 3600
+
+            const gainNode = ctx.createGain()
+            gainNode.gain.value = 0.95
+
+            source.connect(filter)
+            filter.connect(gainNode)
+            gainNode.connect(ctx.destination)
+
+            this.activeSource = source
+            source.onended = () => {
+              if (this.activeSource === source) {
+                this.activeSource = null
+              }
+              onDone()
+            }
+            source.start(0)
+          },
+          () => {
+            this.playFallbackHtmlAudio(base64Data, onDone, genId)
+          }
+        )
+        return
+      } catch {
+        // Fallback to HTMLAudioElement
+      }
+    }
+
+    this.playFallbackHtmlAudio(base64Data, onDone, genId)
+  }
+
+  private playFallbackHtmlAudio(base64Data: string, onDone: () => void, genId: number) {
+    if (this.generationId !== genId) return
+    try {
+      const audio = new Audio(`data:audio/mp3;base64,${base64Data}`)
+      audio.playbackRate = 0.92
+      audio.preservesPitch = false
+      this.activeHtmlAudio = audio
+      audio.onended = () => {
+        if (this.activeHtmlAudio === audio) this.activeHtmlAudio = null
+        onDone()
+      }
+      audio.onerror = () => {
+        if (this.activeHtmlAudio === audio) this.activeHtmlAudio = null
+        onDone()
+      }
+      audio.play().catch(() => {
+        onDone()
+      })
+    } catch {
+      onDone()
+    }
   }
 
   private initVoices() {
@@ -330,7 +462,7 @@ class SpeechService {
 
     // 2. Migrate legacy voice name if present
     if (legacyVoiceName) {
-      const savedLegacy = this.profiles.find((p) => p.voice.name === legacyVoiceName)
+      const savedLegacy = this.profiles.find((p) => p.voice && p.voice.name === legacyVoiceName)
       if (savedLegacy) {
         this.currentProfile = savedLegacy
         this.notify()
@@ -377,6 +509,25 @@ class SpeechService {
     }
     this.lastSpokenText = ''
     this.lastSpokenTime = 0
+    if (this.activeSource) {
+      try {
+        this.activeSource.onended = null
+        this.activeSource.stop()
+      } catch {
+        // ignore
+      }
+      this.activeSource = null
+    }
+    if (this.activeHtmlAudio) {
+      try {
+        this.activeHtmlAudio.onended = null
+        this.activeHtmlAudio.onerror = null
+        this.activeHtmlAudio.pause()
+      } catch {
+        // ignore
+      }
+      this.activeHtmlAudio = null
+    }
     if (this.synth) {
       if (this.currentUtterance) {
         this.currentUtterance.onend = null
@@ -499,6 +650,17 @@ class SpeechService {
     const activeVoice = activeProfile ? activeProfile.voice : null
     const activeRate = activeProfile ? activeProfile.rate : 0.90
     const activePitch = activeProfile ? activeProfile.pitch : 1.05
+    const useCloudMale = Boolean(activeProfile && activeProfile.useCloudMale)
+
+    // Unlock Web Audio context on user gesture if using cloud male voice
+    if (useCloudMale) {
+      this.getAudioContext()
+      // Start fetching all chunks in parallel immediately so there is no gap between sentences
+      chunks.forEach((c) => {
+        this.fetchCloudMaleBase64(c.text).catch(() => {})
+      })
+    }
+
     let chunkIndex = 0
 
     const speakNextChunk = () => {
@@ -514,23 +676,6 @@ class SpeechService {
 
       const currentChunk = chunks[chunkIndex]
       chunkIndex++
-
-      if (this.synth.paused) {
-        this.synth.resume()
-      }
-
-      const utterance = new SpeechSynthesisUtterance(currentChunk.text)
-      if (activeVoice) {
-        utterance.voice = activeVoice
-      }
-      utterance.lang = activeVoice ? activeVoice.lang : 'es-ES'
-
-      // Warm, affectionate, friendly prosody adapted to the chosen profile (female or male)
-      utterance.rate = activeRate
-      utterance.pitch = activePitch
-      utterance.volume = 0.90
-
-      this.currentUtterance = utterance
 
       let chunkDone = false
       const handleDone = () => {
@@ -551,29 +696,84 @@ class SpeechService {
         }, currentChunk.pauseAfterMs)
       }
 
-      utterance.onend = () => {
-        handleDone()
+      if (useCloudMale) {
+        this.fetchCloudMaleBase64(currentChunk.text).then((base64Audio) => {
+          if (this.generationId !== currentGen) return
+          if (base64Audio) {
+            this.playBase64MaleAudio(base64Audio, handleDone, currentGen)
+          } else {
+            // Offline fallback
+            this.speakChunkWithWebSpeech(
+              currentChunk.text,
+              activeVoice,
+              activeRate,
+              activePitch,
+              handleDone
+            )
+          }
+        })
+        return
       }
 
-      utterance.onerror = (e) => {
-        if (e.error !== 'canceled' && e.error !== 'interrupted') {
-          console.warn('Speech chunk error:', e.error)
-        }
-        handleDone()
-      }
-
-      try {
-        this.synth.speak(utterance)
-        if (this.synth.paused) {
-          this.synth.resume()
-        }
-      } catch (err) {
-        console.warn('Failed to speak chunk:', err)
-        handleDone()
-      }
+      this.speakChunkWithWebSpeech(
+        currentChunk.text,
+        activeVoice,
+        activeRate,
+        activePitch,
+        handleDone
+      )
     }
 
     speakNextChunk()
+  }
+
+  private speakChunkWithWebSpeech(
+    text: string,
+    activeVoice: SpeechSynthesisVoice | null,
+    activeRate: number,
+    activePitch: number,
+    handleDone: () => void
+  ) {
+    if (!this.synth) {
+      handleDone()
+      return
+    }
+    if (this.synth.paused) {
+      this.synth.resume()
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text)
+    if (activeVoice) {
+      utterance.voice = activeVoice
+    }
+    utterance.lang = activeVoice ? activeVoice.lang : 'es-ES'
+
+    utterance.rate = activeRate
+    utterance.pitch = activePitch
+    utterance.volume = 0.90
+
+    this.currentUtterance = utterance
+
+    utterance.onend = () => {
+      handleDone()
+    }
+
+    utterance.onerror = (e) => {
+      if (e.error !== 'canceled' && e.error !== 'interrupted') {
+        console.warn('Speech chunk error:', e.error)
+      }
+      handleDone()
+    }
+
+    try {
+      this.synth.speak(utterance)
+      if (this.synth.paused) {
+        this.synth.resume()
+      }
+    } catch (err) {
+      console.warn('Failed to speak chunk:', err)
+      handleDone()
+    }
   }
 }
 

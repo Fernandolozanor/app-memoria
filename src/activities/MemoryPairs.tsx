@@ -168,7 +168,7 @@ export function MemoryPairs({ onComplete, onExit }: Props) {
                 key={card.id}
                 onClick={() => handleCardClick(idx)}
                 disabled={isMatched || isLocked}
-                className={`w-full h-full rounded-2xl sm:rounded-3xl border-2 sm:border-4 transition-all duration-200 flex items-center justify-center p-2 sm:p-4 cursor-pointer select-none min-h-0 ${
+                className={`w-full h-full rounded-2xl sm:rounded-3xl border-2 sm:border-4 transition-all duration-200 flex items-center justify-center p-2 sm:p-4 cursor-pointer select-none min-h-0 overflow-hidden ${
                   isFlipped
                     ? isMatched
                       ? 'bg-emerald-100 border-emerald-500 ring-2 sm:ring-4 ring-emerald-300 scale-[0.98] shadow-xs'
@@ -178,9 +178,9 @@ export function MemoryPairs({ onComplete, onExit }: Props) {
                 aria-label={isFlipped ? card.name : `Carta ${idx + 1}`}
               >
                 {isFlipped ? (
-                  <div className="flex items-center justify-center gap-3 sm:gap-4 animate-in zoom-in-75 duration-200 w-full px-2">
-                    <span className="text-5xl sm:text-7xl shrink-0">{card.icon}</span>
-                    <span className="font-black text-stone-950 text-xl sm:text-3xl text-left leading-tight">
+                  <div className="flex flex-col items-center justify-center gap-1 sm:gap-2 animate-in zoom-in-75 duration-200 w-full h-full overflow-hidden px-1">
+                    <span className="text-4xl sm:text-7xl leading-none shrink-0">{card.icon}</span>
+                    <span className="font-black text-stone-950 text-base sm:text-2xl text-center leading-tight w-full truncate">
                       {card.name}
                     </span>
                   </div>

@@ -369,7 +369,7 @@ export function OddOneOut({ onComplete, onExit }: Props) {
                 key={card.id}
                 disabled={!isVisible || isAdvancingRef.current}
                 onClick={() => handleCardClick(card)}
-                className={`${isLastInFive ? 'col-span-2' : ''} px-3 sm:px-5 py-2 sm:py-4 rounded-2xl sm:rounded-3xl border-2 sm:border-4 flex items-center justify-center gap-3 sm:gap-4 h-full w-full min-h-0 transition-all duration-300 ${
+                className={`${isLastInFive ? 'col-span-2' : ''} px-2 sm:px-4 py-1.5 sm:py-3 rounded-2xl sm:rounded-3xl border-2 sm:border-4 flex flex-col items-center justify-center gap-1 sm:gap-2 h-full w-full min-h-0 overflow-hidden transition-all duration-300 ${
                   !isVisible
                     ? 'bg-purple-50/60 border-dashed border-purple-200 cursor-default scale-95 opacity-50'
                     : isSelectedOdd
@@ -380,10 +380,10 @@ export function OddOneOut({ onComplete, onExit }: Props) {
               >
                 {isVisible ? (
                   <>
-                    <span className="text-5xl sm:text-7xl shrink-0 animate-in zoom-in-75 duration-200" aria-hidden="true">
+                    <span className="text-5xl sm:text-7xl leading-none shrink-0 animate-in zoom-in-75 duration-200" aria-hidden="true">
                       {card.icon}
                     </span>
-                    <span className="font-black text-stone-950 text-lg sm:text-3xl text-left leading-tight">
+                    <span className="font-black text-stone-950 text-base sm:text-2xl text-center leading-tight w-full px-1 truncate">
                       {card.name}
                     </span>
                   </>

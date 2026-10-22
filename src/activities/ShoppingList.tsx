@@ -300,12 +300,17 @@ export function ShoppingList({ onComplete, onExit }: Props) {
             {targetItems.map((item) => (
               <div
                 key={item.id}
-                className="bg-amber-50 rounded-2xl sm:rounded-3xl p-3 sm:p-6 border-2 sm:border-4 border-amber-300 shadow-sm flex items-center justify-center gap-3 sm:flex-col h-full w-full"
+                className="bg-amber-50 rounded-2xl sm:rounded-3xl p-2 sm:p-5 border-2 sm:border-4 border-amber-300 shadow-sm flex flex-col items-center justify-center gap-1 sm:gap-2.5 h-full w-full min-h-0 overflow-hidden"
               >
-                <span className="text-6xl sm:text-8xl shrink-0" aria-hidden="true">
+                <span
+                  className={`${
+                    targetItems.length === 4 ? 'text-5xl sm:text-8xl' : 'text-6xl sm:text-8xl'
+                  } leading-none shrink-0`}
+                  aria-hidden="true"
+                >
                   {item.icon}
                 </span>
-                <span className="font-black text-stone-950 text-2xl sm:text-3xl text-center leading-tight">
+                <span className="font-black text-stone-950 text-xl sm:text-3xl text-center leading-tight w-full px-1 truncate">
                   {item.name}
                 </span>
               </div>
@@ -343,7 +348,7 @@ export function ShoppingList({ onComplete, onExit }: Props) {
 
           {/* Wide 2-column grid with 3, 5, or 6 rows filling the entire screen */}
           <div
-            className={`flex-1 min-h-0 w-full grid grid-cols-2 gap-2 sm:gap-3 ${
+            className={`flex-1 min-h-0 w-full grid grid-cols-2 gap-1.5 sm:gap-3 ${
               currentConfig.choiceCount === 6
                 ? 'grid-rows-3'
                 : currentConfig.choiceCount === 10
@@ -358,7 +363,7 @@ export function ShoppingList({ onComplete, onExit }: Props) {
                   key={item.id}
                   disabled={isFound}
                   onClick={() => handleSelectProduct(item)}
-                  className={`relative px-2.5 sm:px-5 py-1.5 sm:py-3 rounded-2xl sm:rounded-3xl border-2 sm:border-4 flex items-center justify-start gap-2.5 sm:gap-4 transition-all cursor-pointer h-full w-full min-h-0 ${
+                  className={`relative px-2 sm:px-4 py-1 sm:py-2.5 rounded-2xl sm:rounded-3xl border-2 sm:border-4 flex flex-col items-center justify-center gap-0.5 sm:gap-1.5 transition-all cursor-pointer h-full w-full min-h-0 overflow-hidden ${
                     isFound
                       ? 'bg-emerald-100 border-emerald-500 opacity-90 cursor-default ring-2 ring-emerald-300 scale-[0.98]'
                       : 'bg-stone-50 hover:bg-amber-50 border-stone-300 hover:border-amber-400 shadow-xs active:scale-95'
@@ -366,22 +371,28 @@ export function ShoppingList({ onComplete, onExit }: Props) {
                   aria-label={`${item.name} ${isFound ? '(ya encontrado)' : ''}`}
                 >
                   {isFound && (
-                    <div className="absolute top-1.5 right-1.5 bg-emerald-600 text-white rounded-full p-0.5 sm:p-1 shadow-xs">
-                      <Check className="w-4 h-4 sm:w-5 sm:h-5 stroke-[3]" />
+                    <div className="absolute top-1 right-1 sm:top-2 sm:right-2 bg-emerald-600 text-white rounded-full p-0.5 sm:p-1 shadow-xs">
+                      <Check className="w-3.5 h-3.5 sm:w-5 sm:h-5 stroke-[3]" />
                     </div>
                   )}
                   <span
                     className={`${
-                      currentConfig.choiceCount === 6 ? 'text-5xl sm:text-7xl' : 'text-4xl sm:text-6xl'
-                    } shrink-0`}
+                      currentConfig.choiceCount === 6
+                        ? 'text-4xl sm:text-6xl'
+                        : currentConfig.choiceCount === 10
+                        ? 'text-3xl sm:text-5xl'
+                        : 'text-2xl sm:text-5xl'
+                    } leading-none shrink-0`}
                     aria-hidden="true"
                   >
                     {item.icon}
                   </span>
                   <span
                     className={`font-black text-stone-950 ${
-                      currentConfig.choiceCount === 6 ? 'text-lg sm:text-2xl' : 'text-base sm:text-2xl'
-                    } text-left leading-tight flex-1`}
+                      currentConfig.choiceCount === 6
+                        ? 'text-base sm:text-2xl'
+                        : 'text-sm sm:text-xl'
+                    } text-center leading-tight w-full px-1 truncate`}
                   >
                     {item.name}
                   </span>
