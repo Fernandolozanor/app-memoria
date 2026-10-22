@@ -228,9 +228,9 @@ export function SpotObject({ onComplete, onExit }: Props) {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col justify-between bg-white border-3 sm:border-4 border-sky-400 rounded-2xl sm:rounded-3xl p-2 sm:p-6 shadow-md text-center min-h-0 overflow-hidden">
+      <div className="flex-1 flex flex-col justify-between bg-white border-3 sm:border-4 border-sky-400 rounded-2xl sm:rounded-3xl p-2 sm:p-6 shadow-md text-center min-h-0 overflow-hidden gap-2 sm:gap-3">
         <div className="shrink-0">
-          <h3 className="text-xl sm:text-3xl font-black text-sky-950 mb-0.5 sm:mb-2">
+          <h3 className="text-xl sm:text-3xl font-black text-sky-950 mb-0.5 sm:mb-1">
             {promptText}
           </h3>
           <p className="text-sm sm:text-xl font-bold text-stone-700">
@@ -243,18 +243,20 @@ export function SpotObject({ onComplete, onExit }: Props) {
         </div>
 
         {feedback && (
-          <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-sky-100 border-2 border-sky-300 text-sky-950 font-black text-base sm:text-2xl mb-1 sm:mb-3 animate-in fade-in shrink-0">
+          <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-sky-100 border-2 border-sky-300 text-sky-950 font-black text-base sm:text-2xl animate-in fade-in shrink-0">
             {feedback}
           </div>
         )}
 
-        {/* Progressive cards grid: 6 cards (3x2), 9 cards (3x3), 12 cards (4x3) */}
+        {/* Full-screen cards grid: 6 cards (2x3), 9 cards (3x3), 12 cards (3x4) */}
         <div
           className={`grid ${
-            cardCount === 12
-              ? 'grid-cols-4 max-w-xl gap-2 sm:gap-3.5'
-              : 'grid-cols-3 max-w-lg gap-2.5 sm:gap-4'
-          } w-full mx-auto flex-1 min-h-0 my-auto items-center`}
+            cardCount === 6
+              ? 'grid-cols-2 grid-rows-3 gap-2.5 sm:gap-4'
+              : cardCount === 9
+              ? 'grid-cols-3 grid-rows-3 gap-2 sm:gap-3.5'
+              : 'grid-cols-3 grid-rows-4 gap-2 sm:gap-3.5'
+          } w-full flex-1 min-h-0`}
         >
           {Array.from({ length: cardCount }).map((_, idx) => {
             const isTarget = idx === targetIndex
@@ -267,14 +269,10 @@ export function SpotObject({ onComplete, onExit }: Props) {
                 key={idx}
                 disabled={phase !== 'guessing'}
                 onClick={() => handleCardClick(idx)}
-                className={`w-full h-full ${
-                  cardCount === 12
-                    ? 'max-h-[125px] sm:max-h-[175px] min-h-[60px] sm:min-h-[80px] p-1.5 sm:p-2.5'
-                    : 'max-h-[145px] sm:max-h-[200px] min-h-[72px] sm:min-h-[95px] p-2 sm:p-3'
-                } rounded-2xl sm:rounded-3xl border-3 sm:border-4 flex items-center justify-center transition-all cursor-pointer select-none ${
+                className={`w-full h-full min-h-0 p-1.5 sm:p-3 rounded-2xl sm:rounded-3xl border-3 sm:border-4 flex items-center justify-center transition-all cursor-pointer select-none ${
                   isShowingFace
                     ? isTarget && phase === 'guessing'
-                      ? 'bg-emerald-100 border-emerald-500 ring-2 sm:ring-4 ring-emerald-300 scale-105 shadow-md'
+                      ? 'bg-emerald-100 border-emerald-500 ring-2 sm:ring-4 ring-emerald-300 scale-[1.02] shadow-md'
                       : 'bg-sky-50 border-sky-300 shadow-sm'
                     : 'bg-gradient-to-br from-sky-500 to-blue-600 border-sky-400 hover:brightness-105 active:scale-95 shadow-sm'
                 }`}
@@ -283,7 +281,9 @@ export function SpotObject({ onComplete, onExit }: Props) {
                 {isShowingFace ? (
                   <span
                     className={`${
-                      cardCount === 12 ? 'text-5xl sm:text-7xl' : 'text-6xl sm:text-8xl'
+                      cardCount === 6
+                        ? 'text-6xl sm:text-8xl'
+                        : 'text-5xl sm:text-7xl'
                     } animate-in zoom-in-75 duration-150`}
                   >
                     {icon}
@@ -291,7 +291,9 @@ export function SpotObject({ onComplete, onExit }: Props) {
                 ) : (
                   <span
                     className={`text-white font-black ${
-                      cardCount === 12 ? 'text-4xl sm:text-6xl' : 'text-5xl sm:text-7xl'
+                      cardCount === 6
+                        ? 'text-5xl sm:text-7xl'
+                        : 'text-4xl sm:text-6xl'
                     }`}
                   >
                     ?

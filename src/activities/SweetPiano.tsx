@@ -289,12 +289,11 @@ export function SweetPiano({ onComplete, onExit }: Props) {
           </div>
         </div>
 
-        {/* Piano Keys: 3 keys in rounds 1-3, 4 keys in round 4 (including green SI key) */}
+        {/* Piano Keys: Wide full-screen rows (3 rows in rounds 1-3, 4 rows in round 4) */}
         <div
-          style={{
-            gridTemplateColumns: currentRound === 4 ? 'repeat(4, minmax(0, 1fr))' : 'repeat(3, minmax(0, 1fr))',
-          }}
-          className="grid gap-2 sm:gap-6 w-full max-w-xl mx-auto flex-1 min-h-0 my-auto items-stretch"
+          className={`grid grid-cols-1 gap-2.5 sm:gap-4 w-full flex-1 min-h-0 items-stretch ${
+            currentRound === 4 ? 'grid-rows-4' : 'grid-rows-3'
+          }`}
         >
           {visibleKeys.map((k) => {
             const isLit = activeKey === k.id
@@ -303,15 +302,15 @@ export function SweetPiano({ onComplete, onExit }: Props) {
                 key={k.id}
                 disabled={isPlayingSeq}
                 onClick={() => handleKeyPress(k.id)}
-                className={`min-w-0 w-full h-full min-h-[110px] sm:min-h-[180px] max-h-[200px] sm:max-h-[280px] rounded-xl sm:rounded-3xl border-2 sm:border-4 transition-all duration-150 flex flex-col items-center justify-between py-3 sm:py-6 px-1 sm:px-2 cursor-pointer shadow-sm sm:shadow-lg active:scale-95 ${
+                className={`min-w-0 w-full h-full min-h-0 rounded-2xl sm:rounded-3xl border-3 sm:border-4 transition-all duration-150 flex flex-row items-center justify-between px-6 sm:px-10 cursor-pointer shadow-sm sm:shadow-lg active:scale-[0.98] ${
                   isLit ? k.activeColor : `${k.color} opacity-95 hover:opacity-100`
                 }`}
                 aria-label={`Tecla ${k.noteName} ${k.label}`}
               >
-                <span className="text-3xl sm:text-6xl font-black tracking-normal">
+                <span className="text-4xl sm:text-6xl font-black tracking-wide">
                   {k.noteName}
                 </span>
-                <span className="font-black text-sm sm:text-2xl uppercase tracking-normal px-0.5 text-center leading-none w-full">
+                <span className="font-black text-2xl sm:text-4xl uppercase tracking-wide">
                   {k.label}
                 </span>
               </button>

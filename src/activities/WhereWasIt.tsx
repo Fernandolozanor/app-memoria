@@ -32,31 +32,25 @@ const ITEMS_POOL: ItemToPlace[] = [
   { name: 'el pastillero', icon: '💊', isPlural: false },
 ]
 
-// 3 progressive rounds: 9, 12, and 16 total cards on the table
+// 3 progressive rounds: 9 (3x3), 12 (3x4), and 16 (4x4) total cards filling the screen
 const ROUND_CONFIGS = [
   {
     totalCards: 9,
     flippedCount: 3,
-    gridCols: 'grid-cols-3',
-    maxW: 'max-w-sm sm:max-w-lg',
-    cardMaxH: 'max-h-[96px] sm:max-h-[140px]',
-    iconSize: 'text-4xl sm:text-6xl',
+    gridLayout: 'grid-cols-3 grid-rows-3',
+    iconSize: 'text-5xl sm:text-7xl',
   },
   {
     totalCards: 12,
     flippedCount: 4,
-    gridCols: 'grid-cols-4',
-    maxW: 'max-w-md sm:max-w-xl',
-    cardMaxH: 'max-h-[86px] sm:max-h-[125px]',
-    iconSize: 'text-4xl sm:text-6xl',
+    gridLayout: 'grid-cols-3 grid-rows-4',
+    iconSize: 'text-5xl sm:text-7xl',
   },
   {
     totalCards: 16,
     flippedCount: 5,
-    gridCols: 'grid-cols-4',
-    maxW: 'max-w-sm sm:max-w-lg',
-    cardMaxH: 'max-h-[72px] sm:max-h-[108px]',
-    iconSize: 'text-3xl sm:text-5xl',
+    gridLayout: 'grid-cols-4 grid-rows-4',
+    iconSize: 'text-4xl sm:text-6xl',
   },
 ]
 
@@ -291,26 +285,26 @@ export function WhereWasIt({ onComplete, onExit }: Props) {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col justify-between bg-white border-3 sm:border-4 border-yellow-400 rounded-2xl sm:rounded-3xl p-2 sm:p-6 shadow-md text-center min-h-0 overflow-hidden">
+      <div className="flex-1 flex flex-col justify-between bg-white border-3 sm:border-4 border-yellow-400 rounded-2xl sm:rounded-3xl p-2 sm:p-6 shadow-md text-center min-h-0 overflow-hidden gap-1.5 sm:gap-3">
         <div className="shrink-0">
-          <h3 className="text-xl sm:text-3xl font-black text-stone-950 mb-0.5 sm:mb-2">
+          <h3 className="text-xl sm:text-3xl font-black text-stone-950 mb-0.5">
             {titleText}
           </h3>
-          <p className="text-sm sm:text-xl font-bold text-stone-700">
+          <p className="text-sm sm:text-xl font-bold text-stone-700 leading-snug">
             {subtitleText}
           </p>
         </div>
 
         {feedback && (
-          <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-amber-100 border-2 border-amber-400 text-amber-950 font-black text-base sm:text-2xl mb-1 sm:mb-3 animate-in fade-in shrink-0">
+          <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-amber-100 border-2 border-amber-400 text-amber-950 font-black text-base sm:text-2xl animate-in fade-in shrink-0">
             {feedback}
           </div>
         )}
 
-        {/* Dynamic cards grid: 9 (3x3), 12 (4x3), 16 (4x4) */}
-        <div className="p-2 sm:p-4 bg-stone-100 rounded-2xl sm:rounded-3xl border-2 sm:border-4 border-stone-300 my-auto shadow-inner flex-1 min-h-0 flex flex-col justify-center">
+        {/* Full-screen cards grid: 9 (3x3), 12 (3x4), 16 (4x4) */}
+        <div className="p-2 sm:p-4 bg-stone-100 rounded-2xl sm:rounded-3xl border-2 sm:border-4 border-stone-300 shadow-inner flex-1 min-h-0 flex flex-col">
           <div
-            className={`grid ${currentConfig.gridCols} gap-2 sm:gap-4 w-full ${currentConfig.maxW} mx-auto items-center justify-center`}
+            className={`grid ${currentConfig.gridLayout} gap-2 sm:gap-3.5 w-full h-full flex-1 min-h-0`}
           >
             {Array.from({ length: currentConfig.totalCards }).map((_, slotIdx) => {
               const isFlippedInShowing =
@@ -326,12 +320,12 @@ export function WhereWasIt({ onComplete, onExit }: Props) {
                   key={slotIdx}
                   disabled={phase !== 'guessing'}
                   onClick={() => handleSlotClick(slotIdx)}
-                  className={`w-full aspect-square ${currentConfig.cardMaxH} rounded-xl sm:rounded-2xl border-2 sm:border-4 flex flex-col items-center justify-center p-1 sm:p-2 transition-all select-none ${
+                  className={`w-full h-full min-h-0 rounded-xl sm:rounded-2xl border-2 sm:border-4 flex flex-col items-center justify-center p-1 sm:p-2 transition-all select-none ${
                     phase === 'guessing' ? 'cursor-pointer active:scale-95' : 'cursor-default'
                   } ${
                     isShowingFace
                       ? isTargetItem
-                        ? 'bg-amber-100 border-amber-500 ring-4 ring-amber-300 shadow-md scale-105'
+                        ? 'bg-amber-100 border-amber-500 ring-4 ring-amber-300 shadow-md scale-[1.02]'
                         : 'bg-white border-stone-300 shadow-inner'
                       : 'bg-gradient-to-br from-amber-400 to-yellow-500 border-amber-300 shadow-xs sm:shadow-md hover:brightness-105'
                   }`}
@@ -344,7 +338,7 @@ export function WhereWasIt({ onComplete, onExit }: Props) {
                       </span>
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center border-2 border-dashed border-stone-200 rounded-lg sm:rounded-xl">
-                        <span className="text-stone-500 font-black text-sm sm:text-lg">
+                        <span className="text-stone-500 font-black text-base sm:text-xl">
                           Vacía
                         </span>
                       </div>

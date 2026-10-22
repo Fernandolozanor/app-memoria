@@ -337,9 +337,9 @@ export function OddOneOut({ onComplete, onExit }: Props) {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col justify-between bg-white border-3 sm:border-4 border-purple-400 rounded-2xl sm:rounded-3xl p-2.5 sm:p-8 shadow-md text-center min-h-0 overflow-hidden">
+      <div className="flex-1 flex flex-col justify-between bg-white border-3 sm:border-4 border-purple-400 rounded-2xl sm:rounded-3xl p-2.5 sm:p-7 shadow-md text-center min-h-0 overflow-hidden gap-2 sm:gap-3">
         <div className="shrink-0">
-          <h3 className="text-xl sm:text-3xl font-black text-stone-950 mb-0.5 sm:mb-2">
+          <h3 className="text-xl sm:text-3xl font-black text-stone-950 mb-0.5 sm:mb-1">
             ¿Cuál es el intruso?
           </h3>
           <p className="text-sm sm:text-xl font-bold text-stone-700">
@@ -348,41 +348,42 @@ export function OddOneOut({ onComplete, onExit }: Props) {
         </div>
 
         {feedback && (
-          <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-purple-100 border-2 border-purple-400 text-purple-950 font-black text-base sm:text-2xl mb-1 sm:mb-4 animate-in fade-in shrink-0">
+          <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-purple-100 border-2 border-purple-400 text-purple-950 font-black text-base sm:text-2xl animate-in fade-in shrink-0">
             {feedback}
           </div>
         )}
 
-        {/* Dynamic cards grid: 4 cards (2 cols), 5 or 6 cards (3 cols = 2 rows!) */}
+        {/* Wide 2-column grid with 2 or 3 rows filling the entire screen */}
         <div
-          className={`grid gap-2 sm:gap-4 w-full max-w-xl mx-auto flex-1 min-h-0 my-auto items-center ${
-            currentRound.cardCount === 4 ? 'grid-cols-2' : 'grid-cols-3'
+          className={`grid grid-cols-2 gap-2.5 sm:gap-4 w-full flex-1 min-h-0 ${
+            currentRound.cardCount === 4 ? 'grid-rows-2' : 'grid-rows-3'
           }`}
         >
-          {currentRound.cards.map((card) => {
+          {currentRound.cards.map((card, idx) => {
             const isVisible = visibleCardIds.includes(card.id)
             const isSelectedOdd = selectedOddId === card.id
+            const isLastInFive = currentRound.cardCount === 5 && idx === 4
 
             return (
               <button
                 key={card.id}
                 disabled={!isVisible || isAdvancingRef.current}
                 onClick={() => handleCardClick(card)}
-                className={`p-2 sm:p-5 rounded-2xl sm:rounded-3xl border-2 sm:border-4 flex flex-col items-center justify-center h-full min-h-[76px] sm:min-h-[155px] transition-all duration-300 ${
+                className={`${isLastInFive ? 'col-span-2' : ''} px-3 sm:px-5 py-2 sm:py-4 rounded-2xl sm:rounded-3xl border-2 sm:border-4 flex items-center justify-center gap-3 sm:gap-4 h-full w-full min-h-0 transition-all duration-300 ${
                   !isVisible
                     ? 'bg-purple-50/60 border-dashed border-purple-200 cursor-default scale-95 opacity-50'
                     : isSelectedOdd
-                    ? 'bg-emerald-100 border-emerald-500 ring-4 ring-emerald-300 scale-105 shadow-md cursor-default'
+                    ? 'bg-emerald-100 border-emerald-500 ring-4 ring-emerald-300 scale-[1.02] shadow-md cursor-default'
                     : 'bg-stone-50 hover:bg-purple-50 border-stone-300 hover:border-purple-500 shadow-xs sm:shadow-md active:scale-95 cursor-pointer'
                 }`}
                 aria-label={isVisible ? card.name : 'Tarjeta por descubrir'}
               >
                 {isVisible ? (
                   <>
-                    <span className="text-5xl sm:text-7xl mb-1 sm:mb-2 animate-in zoom-in-75 duration-200" aria-hidden="true">
+                    <span className="text-5xl sm:text-7xl shrink-0 animate-in zoom-in-75 duration-200" aria-hidden="true">
                       {card.icon}
                     </span>
-                    <span className="font-black text-stone-950 text-base sm:text-2xl text-center leading-tight break-words w-full px-1">
+                    <span className="font-black text-stone-950 text-lg sm:text-3xl text-left leading-tight">
                       {card.name}
                     </span>
                   </>

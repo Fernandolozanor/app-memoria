@@ -294,13 +294,13 @@ export function DailyCoins({ onComplete, onExit }: Props) {
   // Realistic visual styling for Euro coins with high contrast and tactile borders
   const getCoinVisual = (coin: CoinInstance, isTaken: boolean) => {
     const baseClasses =
-      'relative flex flex-col items-center justify-center rounded-2xl sm:rounded-full font-black select-none transition-all duration-200 cursor-pointer shadow-xs sm:shadow-md'
+      'relative flex flex-row items-center justify-center gap-2.5 sm:gap-4 rounded-2xl sm:rounded-3xl font-black select-none transition-all duration-200 cursor-pointer shadow-xs sm:shadow-md px-2.5 sm:px-4'
 
     if (isTaken) {
       return (
-        <div className="w-full h-full min-h-[60px] sm:min-h-[115px] rounded-2xl sm:rounded-3xl border-2 sm:border-3 border-dashed border-stone-300 bg-stone-100 flex flex-col items-center justify-center text-stone-400 p-1">
-          <span className="text-xs sm:text-lg font-bold">Puesta</span>
-          <span className="text-sm sm:text-xl font-bold opacity-50">{coin.label}</span>
+        <div className="w-full h-full min-h-0 rounded-2xl sm:rounded-3xl border-2 sm:border-3 border-dashed border-stone-300 bg-stone-100 flex flex-row items-center justify-center gap-2 text-stone-400 px-2">
+          <span className="text-sm sm:text-xl font-bold">✓ Puesta:</span>
+          <span className="text-base sm:text-2xl font-black opacity-60">{coin.label}</span>
         </div>
       )
     }
@@ -309,68 +309,68 @@ export function DailyCoins({ onComplete, onExit }: Props) {
       case '2e':
         return (
           <div
-            className={`${baseClasses} w-full h-full min-h-[60px] sm:min-h-[115px] bg-gradient-to-br from-stone-200 via-stone-300 to-stone-400 border-2 sm:border-4 border-amber-500 hover:border-amber-600 active:scale-95 py-1.5 sm:py-2`}
+            className={`${baseClasses} w-full h-full min-h-0 bg-gradient-to-br from-stone-200 via-stone-300 to-stone-400 border-3 sm:border-4 border-amber-500 hover:border-amber-600 active:scale-95`}
           >
-            <div className="w-11 h-11 sm:w-18 sm:h-18 rounded-full bg-gradient-to-br from-amber-300 to-amber-500 border border-amber-600 flex items-center justify-center shadow-inner">
-              <span className="text-amber-950 text-lg sm:text-4xl font-black">2€</span>
+            <div className="w-10 h-10 sm:w-14 sm:h-14 shrink-0 rounded-full bg-gradient-to-br from-amber-300 to-amber-500 border-2 border-amber-600 flex items-center justify-center shadow-inner">
+              <span className="text-amber-950 text-lg sm:text-3xl font-black">2€</span>
             </div>
-            <span className="hidden sm:block text-stone-900 font-black text-sm sm:text-lg mt-1">2 Euros</span>
+            <span className="text-stone-950 font-black text-lg sm:text-2xl">2 Euros</span>
           </div>
         )
       case '1e':
         return (
           <div
-            className={`${baseClasses} w-full h-full min-h-[60px] sm:min-h-[115px] bg-gradient-to-br from-amber-300 via-amber-400 to-amber-500 border-2 sm:border-4 border-stone-400 hover:border-stone-600 active:scale-95 py-1.5 sm:py-2`}
+            className={`${baseClasses} w-full h-full min-h-0 bg-gradient-to-br from-amber-300 via-amber-400 to-amber-500 border-3 sm:border-4 border-stone-400 hover:border-stone-600 active:scale-95`}
           >
-            <div className="w-11 h-11 sm:w-18 sm:h-18 rounded-full bg-gradient-to-br from-stone-100 to-stone-300 border border-stone-400 flex items-center justify-center shadow-inner">
-              <span className="text-stone-900 text-lg sm:text-4xl font-black">1€</span>
+            <div className="w-10 h-10 sm:w-14 sm:h-14 shrink-0 rounded-full bg-gradient-to-br from-stone-100 to-stone-300 border-2 border-stone-400 flex items-center justify-center shadow-inner">
+              <span className="text-stone-900 text-lg sm:text-3xl font-black">1€</span>
             </div>
-            <span className="hidden sm:block text-amber-950 font-black text-sm sm:text-lg mt-1">1 Euro</span>
+            <span className="text-amber-950 font-black text-lg sm:text-2xl">1 Euro</span>
           </div>
         )
       case '50c':
         return (
           <div
-            className={`${baseClasses} w-full h-full min-h-[60px] sm:min-h-[115px] bg-gradient-to-br from-amber-200 via-amber-300 to-amber-400 border-2 sm:border-4 border-amber-600 hover:border-amber-700 active:scale-95 py-1.5 sm:py-2`}
+            className={`${baseClasses} w-full h-full min-h-0 bg-gradient-to-br from-amber-200 via-amber-300 to-amber-400 border-3 sm:border-4 border-amber-600 hover:border-amber-700 active:scale-95`}
           >
-            <div className="w-10 h-10 sm:w-16 sm:h-16 rounded-full bg-amber-100 border border-amber-500 flex items-center justify-center shadow-inner">
-              <span className="text-amber-950 text-sm sm:text-3xl font-black">50c</span>
+            <div className="w-10 h-10 sm:w-14 sm:h-14 shrink-0 rounded-full bg-amber-100 border-2 border-amber-500 flex items-center justify-center shadow-inner">
+              <span className="text-amber-950 text-base sm:text-2xl font-black">50c</span>
             </div>
-            <span className="hidden sm:block text-amber-950 font-black text-xs sm:text-base mt-1">50 céntimos</span>
+            <span className="text-amber-950 font-black text-base sm:text-2xl">50 céntimos</span>
           </div>
         )
       case '20c':
         return (
           <div
-            className={`${baseClasses} w-full h-full min-h-[60px] sm:min-h-[115px] bg-gradient-to-br from-amber-200 via-amber-300 to-amber-400 border-2 sm:border-4 border-amber-500 hover:border-amber-600 active:scale-95 py-1.5 sm:py-2`}
+            className={`${baseClasses} w-full h-full min-h-0 bg-gradient-to-br from-amber-200 via-amber-300 to-amber-400 border-3 sm:border-4 border-amber-500 hover:border-amber-600 active:scale-95`}
           >
-            <div className="w-10 h-10 sm:w-16 sm:h-16 rounded-full bg-amber-100 border border-amber-500 flex items-center justify-center shadow-inner">
-              <span className="text-amber-950 text-sm sm:text-3xl font-black">20c</span>
+            <div className="w-10 h-10 sm:w-14 sm:h-14 shrink-0 rounded-full bg-amber-100 border-2 border-amber-500 flex items-center justify-center shadow-inner">
+              <span className="text-amber-950 text-base sm:text-2xl font-black">20c</span>
             </div>
-            <span className="hidden sm:block text-amber-950 font-black text-xs sm:text-base mt-1">20 céntimos</span>
+            <span className="text-amber-950 font-black text-base sm:text-2xl">20 céntimos</span>
           </div>
         )
       case '10c':
         return (
           <div
-            className={`${baseClasses} w-full h-full min-h-[60px] sm:min-h-[115px] bg-gradient-to-br from-amber-200 via-amber-300 to-amber-400 border-2 sm:border-4 border-amber-500 hover:border-amber-600 active:scale-95 py-1.5 sm:py-2`}
+            className={`${baseClasses} w-full h-full min-h-0 bg-gradient-to-br from-amber-200 via-amber-300 to-amber-400 border-3 sm:border-4 border-amber-500 hover:border-amber-600 active:scale-95`}
           >
-            <div className="w-9 h-9 sm:w-15 sm:h-15 rounded-full bg-amber-100 border border-amber-500 flex items-center justify-center shadow-inner">
-              <span className="text-amber-950 text-sm sm:text-3xl font-black">10c</span>
+            <div className="w-10 h-10 sm:w-14 sm:h-14 shrink-0 rounded-full bg-amber-100 border-2 border-amber-500 flex items-center justify-center shadow-inner">
+              <span className="text-amber-950 text-base sm:text-2xl font-black">10c</span>
             </div>
-            <span className="hidden sm:block text-amber-950 font-black text-xs sm:text-base mt-1">10 céntimos</span>
+            <span className="text-amber-950 font-black text-base sm:text-2xl">10 céntimos</span>
           </div>
         )
       case '5c':
       default:
         return (
           <div
-            className={`${baseClasses} w-full h-full min-h-[60px] sm:min-h-[115px] bg-gradient-to-br from-orange-200 via-orange-300 to-orange-400 border-2 sm:border-4 border-orange-700 hover:border-orange-800 active:scale-95 py-1.5 sm:py-2`}
+            className={`${baseClasses} w-full h-full min-h-0 bg-gradient-to-br from-orange-200 via-orange-300 to-orange-400 border-3 sm:border-4 border-orange-700 hover:border-orange-800 active:scale-95`}
           >
-            <div className="w-9 h-9 sm:w-15 sm:h-15 rounded-full bg-orange-100 border border-orange-600 flex items-center justify-center shadow-inner">
-              <span className="text-orange-950 text-sm sm:text-3xl font-black">5c</span>
+            <div className="w-10 h-10 sm:w-14 sm:h-14 shrink-0 rounded-full bg-orange-100 border-2 border-orange-600 flex items-center justify-center shadow-inner">
+              <span className="text-orange-950 text-base sm:text-2xl font-black">5c</span>
             </div>
-            <span className="hidden sm:block text-orange-950 font-black text-xs sm:text-base mt-1">5 céntimos</span>
+            <span className="text-orange-950 font-black text-base sm:text-2xl">5 céntimos</span>
           </div>
         )
     }
@@ -462,16 +462,16 @@ export function DailyCoins({ onComplete, onExit }: Props) {
           </div>
         )}
 
-        {/* Table with ALWAYS 10 coins in 2 neat rows of 5 */}
-        <div className="grid grid-cols-5 gap-1 sm:gap-3 my-auto shrink-0 w-full">
+        {/* Table with ALWAYS 10 coins in 2 wide columns x 5 rows filling the screen */}
+        <div className="grid grid-cols-2 grid-rows-5 gap-1.5 sm:gap-3 flex-1 min-h-0 w-full items-stretch">
           {tableCoins.map((coin) => {
             const isTaken = selectedCoins.some((c) => c.instanceId === coin.instanceId)
             return (
               <button
                 key={coin.instanceId}
                 onClick={() => handleSelectCoin(coin)}
-                className={`p-0.5 sm:p-1.5 rounded-xl sm:rounded-2xl cursor-pointer transition-all active:scale-95 ${
-                  isTaken ? 'opacity-70 cursor-pointer' : 'hover:scale-105'
+                className={`w-full h-full min-h-0 rounded-2xl sm:rounded-3xl cursor-pointer transition-all active:scale-95 ${
+                  isTaken ? 'opacity-70 cursor-pointer' : ''
                 }`}
                 title={isTaken ? 'Toca para devolver al mostrador' : `Añadir moneda de ${coin.label}`}
                 aria-label={`Moneda de ${coin.label} ${isTaken ? '(seleccionada)' : ''}`}

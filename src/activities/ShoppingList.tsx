@@ -276,9 +276,9 @@ export function ShoppingList({ onComplete, onExit }: Props) {
       </div>
 
       {phase === 'memorize' && (
-        <div className="flex-1 flex flex-col justify-between bg-white border-3 sm:border-4 border-amber-400 rounded-2xl sm:rounded-3xl p-3 sm:p-7 text-center shadow-md min-h-0 overflow-hidden">
+        <div className="flex-1 flex flex-col justify-between bg-white border-3 sm:border-4 border-amber-400 rounded-2xl sm:rounded-3xl p-3 sm:p-6 text-center shadow-md min-h-0 overflow-hidden gap-2 sm:gap-4">
           <div className="shrink-0">
-            <div className="inline-flex items-center gap-2 text-amber-950 font-black text-xl sm:text-3xl mb-1 sm:mb-2">
+            <div className="inline-flex items-center gap-2 text-amber-950 font-black text-xl sm:text-3xl mb-0.5 sm:mb-1">
               <Eye className="w-6 h-6 sm:w-10 sm:h-10 text-amber-600 stroke-[2.5]" />
               <span>Recuerda estos {targetItems.length} alimentos:</span>
             </div>
@@ -288,16 +288,24 @@ export function ShoppingList({ onComplete, onExit }: Props) {
             </p>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-3 sm:gap-6 my-auto shrink-0">
+          <div
+            className={`flex-1 min-h-0 w-full grid gap-2.5 sm:gap-4 ${
+              targetItems.length === 2
+                ? 'grid-cols-1 grid-rows-2 sm:grid-cols-2 sm:grid-rows-1'
+                : targetItems.length === 3
+                ? 'grid-cols-1 grid-rows-3 sm:grid-cols-3 sm:grid-rows-1'
+                : 'grid-cols-2 grid-rows-2'
+            }`}
+          >
             {targetItems.map((item) => (
               <div
                 key={item.id}
-                className="bg-amber-50 rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 border-2 sm:border-3 border-amber-300 shadow-sm flex flex-col items-center w-36 sm:w-52"
+                className="bg-amber-50 rounded-2xl sm:rounded-3xl p-3 sm:p-6 border-2 sm:border-4 border-amber-300 shadow-sm flex items-center justify-center gap-3 sm:flex-col h-full w-full"
               >
-                <span className="text-6xl sm:text-8xl mb-1.5 sm:mb-2" aria-hidden="true">
+                <span className="text-6xl sm:text-8xl shrink-0" aria-hidden="true">
                   {item.icon}
                 </span>
-                <span className="font-black text-stone-950 text-base sm:text-3xl text-center leading-tight">
+                <span className="font-black text-stone-950 text-2xl sm:text-3xl text-center leading-tight">
                   {item.name}
                 </span>
               </div>
@@ -306,7 +314,7 @@ export function ShoppingList({ onComplete, onExit }: Props) {
 
           <button
             onClick={handleFinishMemorizing}
-            className="w-full py-3 sm:py-5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl sm:rounded-3xl font-black text-lg sm:text-3xl shadow-md border-2 sm:border-3 border-emerald-700 transition-all active:scale-95 cursor-pointer min-h-[52px] sm:min-h-[72px] shrink-0 mt-auto"
+            className="w-full py-3.5 sm:py-5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl sm:rounded-3xl font-black text-lg sm:text-3xl shadow-md border-2 sm:border-3 border-emerald-700 transition-all active:scale-95 cursor-pointer min-h-[54px] sm:min-h-[72px] shrink-0"
           >
             {currentTexts.memorizeButton}
           </button>
@@ -314,15 +322,15 @@ export function ShoppingList({ onComplete, onExit }: Props) {
       )}
 
       {phase === 'recall' && (
-        <div className="flex-1 flex flex-col justify-between bg-white border-3 sm:border-4 border-stone-300 rounded-2xl sm:rounded-3xl p-2 sm:p-5 shadow-md min-h-0 overflow-hidden">
-          <div className="flex items-center justify-between gap-2 mb-1.5 sm:mb-3 shrink-0">
+        <div className="flex-1 flex flex-col justify-between bg-white border-3 sm:border-4 border-stone-300 rounded-2xl sm:rounded-3xl p-2 sm:p-5 shadow-md min-h-0 overflow-hidden gap-1.5 sm:gap-3">
+          <div className="flex items-center justify-between gap-2 shrink-0">
             <div className="flex items-center gap-2">
-              <ShoppingBag className="w-5 h-5 sm:w-8 sm:h-8 text-amber-600 stroke-[2.5]" />
-              <h3 className="font-black text-base sm:text-2xl text-stone-950">
+              <ShoppingBag className="w-5 h-5 sm:w-8 sm:h-8 text-amber-600 stroke-[2.5] shrink-0" />
+              <h3 className="font-black text-base sm:text-2xl text-stone-950 leading-tight">
                 {currentTexts.recallTitle}
               </h3>
             </div>
-            <span className="font-black text-sm sm:text-lg text-emerald-950 bg-emerald-100 px-2.5 sm:px-3 py-1 rounded-xl border border-emerald-400">
+            <span className="font-black text-sm sm:text-lg text-emerald-950 bg-emerald-100 px-2.5 sm:px-3 py-1 rounded-xl border border-emerald-400 shrink-0">
               {selectedIds.length} de {targetItems.length}
             </span>
           </div>
@@ -333,14 +341,14 @@ export function ShoppingList({ onComplete, onExit }: Props) {
             </div>
           )}
 
-          {/* Dynamic grid responding to choice count: 6, 10, or 12 items */}
+          {/* Wide 2-column grid with 3, 5, or 6 rows filling the entire screen */}
           <div
-            className={`flex-1 min-h-0 my-auto grid gap-1.5 sm:gap-3 ${
+            className={`flex-1 min-h-0 w-full grid grid-cols-2 gap-2 sm:gap-3 ${
               currentConfig.choiceCount === 6
-                ? 'grid-cols-3'
+                ? 'grid-rows-3'
                 : currentConfig.choiceCount === 10
-                ? 'grid-cols-5'
-                : 'grid-cols-4 sm:grid-cols-6'
+                ? 'grid-rows-5'
+                : 'grid-rows-6'
             }`}
           >
             {displayItems.map((item) => {
@@ -350,30 +358,30 @@ export function ShoppingList({ onComplete, onExit }: Props) {
                   key={item.id}
                   disabled={isFound}
                   onClick={() => handleSelectProduct(item)}
-                  className={`relative p-1.5 sm:p-3 rounded-xl sm:rounded-2xl border-2 sm:border-3 flex flex-col items-center justify-center transition-all cursor-pointer h-full min-h-[60px] sm:min-h-[110px] ${
+                  className={`relative px-2.5 sm:px-5 py-1.5 sm:py-3 rounded-2xl sm:rounded-3xl border-2 sm:border-4 flex items-center justify-start gap-2.5 sm:gap-4 transition-all cursor-pointer h-full w-full min-h-0 ${
                     isFound
-                      ? 'bg-emerald-100 border-emerald-500 opacity-90 cursor-default ring-2 ring-emerald-300 scale-95'
+                      ? 'bg-emerald-100 border-emerald-500 opacity-90 cursor-default ring-2 ring-emerald-300 scale-[0.98]'
                       : 'bg-stone-50 hover:bg-amber-50 border-stone-300 hover:border-amber-400 shadow-xs active:scale-95'
                   }`}
                   aria-label={`${item.name} ${isFound ? '(ya encontrado)' : ''}`}
                 >
                   {isFound && (
-                    <div className="absolute top-1 right-1 bg-emerald-600 text-white rounded-full p-0.5 sm:p-1 shadow-xs">
-                      <Check className="w-3.5 h-3.5 sm:w-5 sm:h-5 stroke-[3]" />
+                    <div className="absolute top-1.5 right-1.5 bg-emerald-600 text-white rounded-full p-0.5 sm:p-1 shadow-xs">
+                      <Check className="w-4 h-4 sm:w-5 sm:h-5 stroke-[3]" />
                     </div>
                   )}
                   <span
                     className={`${
-                      currentConfig.choiceCount >= 10 ? 'text-3xl sm:text-6xl' : 'text-5xl sm:text-7xl'
-                    } mb-1`}
+                      currentConfig.choiceCount === 6 ? 'text-5xl sm:text-7xl' : 'text-4xl sm:text-6xl'
+                    } shrink-0`}
                     aria-hidden="true"
                   >
                     {item.icon}
                   </span>
                   <span
                     className={`font-black text-stone-950 ${
-                      currentConfig.choiceCount === 6 ? 'text-sm sm:text-2xl' : 'text-xs sm:text-xl'
-                    } text-center leading-tight break-words w-full px-0.5`}
+                      currentConfig.choiceCount === 6 ? 'text-lg sm:text-2xl' : 'text-base sm:text-2xl'
+                    } text-left leading-tight flex-1`}
                   >
                     {item.name}
                   </span>

@@ -514,7 +514,7 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
             {/* 3D Flip Card Container */}
             <div
               style={{ perspective: '1000px' }}
-              className="w-full max-w-xs sm:max-w-sm mx-auto my-auto flex-1 flex flex-col justify-center min-h-0"
+              className="w-full flex-1 flex flex-col justify-center min-h-0 my-1 sm:my-2"
             >
               <div
                 style={{
@@ -522,25 +522,25 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
                   transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
                   transform: isCardFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
                 }}
-                className="relative w-full aspect-square max-h-[240px] sm:max-h-[320px] mx-auto"
+                className="relative w-full h-full flex-1 min-h-0 mx-auto"
               >
                 {/* Front Face: Person's Avatar, Name & Hobby */}
                 <div
                   style={{ backfaceVisibility: 'hidden' }}
-                  className="absolute inset-0 bg-pink-50 border-3 sm:border-4 border-pink-300 rounded-2xl sm:rounded-3xl p-3 sm:p-6 shadow-md flex flex-col items-center justify-center text-center select-none"
+                  className="absolute inset-0 bg-pink-50 border-3 sm:border-4 border-pink-300 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-md flex flex-col items-center justify-center text-center select-none"
                 >
-                  <span className="text-7xl sm:text-9xl mb-1 sm:mb-2 select-none animate-in zoom-in-75 duration-300">
+                  <span className="text-8xl sm:text-9xl mb-2 sm:mb-3 select-none animate-in zoom-in-75 duration-300 leading-none">
                     {cleanAvatar(currentTarget.avatar)}
                   </span>
-                  <h4 className="font-black text-pink-950 text-2xl sm:text-4xl mb-0.5 sm:mb-1">
+                  <h4 className="font-black text-pink-950 text-3xl sm:text-5xl mb-1 sm:mb-2">
                     {currentTarget.name}
                   </h4>
-                  <p className="text-stone-700 font-bold text-sm sm:text-xl">
+                  <p className="text-stone-800 font-black text-lg sm:text-2xl">
                     {currentTarget.hobby} {currentTarget.hobbyEmoji}
                   </p>
 
                   {/* Visual countdown bar synchronized with locution */}
-                  <div className="w-36 sm:w-52 h-2 sm:h-3 bg-pink-200 rounded-full mt-2 sm:mt-4 overflow-hidden">
+                  <div className="w-48 sm:w-64 h-3 sm:h-4 bg-pink-200 rounded-full mt-3 sm:mt-5 overflow-hidden">
                     <div
                       className="h-full bg-pink-500 rounded-full"
                       style={{
@@ -557,12 +557,12 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
                     backfaceVisibility: 'hidden',
                     transform: 'rotateY(180deg)',
                   }}
-                  className="absolute inset-0 bg-gradient-to-br from-pink-400 to-rose-500 border-3 sm:border-4 border-pink-300 rounded-2xl sm:rounded-3xl p-3 sm:p-6 shadow-md flex flex-col items-center justify-center text-center select-none"
+                  className="absolute inset-0 bg-gradient-to-br from-pink-400 to-rose-500 border-3 sm:border-4 border-pink-300 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-md flex flex-col items-center justify-center text-center select-none"
                 >
-                  <span className="text-white font-black text-7xl sm:text-9xl select-none">
+                  <span className="text-white font-black text-8xl sm:text-9xl select-none">
                     ?
                   </span>
-                  <span className="text-white font-bold text-base sm:text-2xl mt-1 opacity-90">
+                  <span className="text-white font-black text-xl sm:text-3xl mt-2 opacity-95">
                     ¿Quién era?
                   </span>
                 </div>
@@ -601,8 +601,12 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
 
             {/* Grid displaying the face cards appearing poco a poco */}
             <div
-              className={`grid gap-2 sm:gap-3.5 max-w-md mx-auto flex-1 min-h-0 my-auto items-center justify-center w-full ${
-                choiceCount === 4 ? 'grid-cols-2' : 'grid-cols-3'
+              className={`grid gap-2.5 sm:gap-4 w-full flex-1 min-h-0 items-stretch ${
+                choiceCount === 4
+                  ? 'grid-cols-2 grid-rows-2'
+                  : choiceCount === 6
+                  ? 'grid-cols-2 grid-rows-3'
+                  : 'grid-cols-3 grid-rows-3'
               }`}
             >
               {choices.map((person, idx) => {
@@ -612,7 +616,7 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
                     key={person.id}
                     disabled={!isVisible || isAdvancingRef.current}
                     onClick={() => handleSelectPerson(person)}
-                    className={`border-2 sm:border-4 rounded-2xl sm:rounded-3xl p-1.5 sm:p-3 flex items-center justify-center shadow-xs sm:shadow-md transition-all h-full min-h-[68px] sm:min-h-[120px] ${
+                    className={`border-3 sm:border-4 rounded-2xl sm:rounded-3xl p-2 sm:p-3 flex items-center justify-center shadow-xs sm:shadow-md transition-all w-full h-full min-h-0 ${
                       isVisible
                         ? 'bg-stone-50 hover:bg-pink-50 border-stone-300 hover:border-pink-500 cursor-pointer active:scale-95'
                         : 'bg-pink-50/50 border-dashed border-pink-200 cursor-default'
@@ -621,18 +625,18 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
                   >
                     {isVisible ? (
                       <span
-                        className={`select-none animate-in zoom-in-75 fade-in duration-300 ${
+                        className={`select-none animate-in zoom-in-75 fade-in duration-300 leading-none ${
                           choiceCount === 9
                             ? 'text-5xl sm:text-7xl'
                             : choiceCount === 6
                             ? 'text-6xl sm:text-8xl'
-                            : 'text-6xl sm:text-9xl'
+                            : 'text-7xl sm:text-9xl'
                         }`}
                       >
                         {cleanAvatar(person.avatar)}
                       </span>
                     ) : (
-                      <span className="text-pink-300 font-black text-3xl sm:text-5xl select-none opacity-40 animate-pulse">
+                      <span className="text-pink-300 font-black text-4xl sm:text-6xl select-none opacity-40 animate-pulse">
                         ?
                       </span>
                     )}

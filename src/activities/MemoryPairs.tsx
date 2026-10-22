@@ -143,8 +143,8 @@ export function MemoryPairs({ onComplete, onExit }: Props) {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col justify-between bg-white border-3 sm:border-4 border-stone-300 rounded-2xl sm:rounded-3xl p-2.5 sm:p-7 shadow-md min-h-0 overflow-hidden">
-        <div className="text-center mb-1 sm:mb-3 shrink-0">
+      <div className="flex-1 flex flex-col justify-between bg-white border-3 sm:border-4 border-stone-300 rounded-2xl sm:rounded-3xl p-2.5 sm:p-6 shadow-md min-h-0 overflow-hidden gap-2 sm:gap-3">
+        <div className="text-center shrink-0">
           <h3 className="font-black text-xl sm:text-3xl text-stone-950">
             Encuentra las parejas
           </h3>
@@ -153,10 +153,10 @@ export function MemoryPairs({ onComplete, onExit }: Props) {
           </p>
         </div>
 
-        {/* 6 or 8 cards grid - using 3 or 4 columns so it takes only 2 rows! */}
+        {/* Wide 2-column grid with 3 or 4 rows filling the entire screen */}
         <div
-          className={`grid gap-2 sm:gap-4 justify-center w-full max-w-xl mx-auto flex-1 min-h-0 my-auto ${
-            level === 3 ? 'grid-cols-3' : 'grid-cols-4'
+          className={`grid grid-cols-2 gap-2.5 sm:gap-4 w-full flex-1 min-h-0 ${
+            level === 3 ? 'grid-rows-3' : 'grid-rows-4'
           }`}
         >
           {cards.map((card, idx) => {
@@ -168,19 +168,19 @@ export function MemoryPairs({ onComplete, onExit }: Props) {
                 key={card.id}
                 onClick={() => handleCardClick(idx)}
                 disabled={isMatched || isLocked}
-                className={`w-full h-full rounded-2xl sm:rounded-3xl border-2 sm:border-4 transition-all duration-200 flex flex-col items-center justify-center p-1.5 sm:p-3 cursor-pointer select-none min-h-[70px] sm:min-h-[120px] ${
+                className={`w-full h-full rounded-2xl sm:rounded-3xl border-2 sm:border-4 transition-all duration-200 flex items-center justify-center p-2 sm:p-4 cursor-pointer select-none min-h-0 ${
                   isFlipped
                     ? isMatched
-                      ? 'bg-emerald-100 border-emerald-500 ring-2 sm:ring-4 ring-emerald-300 scale-95 shadow-xs'
+                      ? 'bg-emerald-100 border-emerald-500 ring-2 sm:ring-4 ring-emerald-300 scale-[0.98] shadow-xs'
                       : `${card.color} border-rose-400 shadow-sm scale-100`
                     : 'bg-gradient-to-br from-rose-500 to-pink-600 border-rose-300 hover:brightness-105 active:scale-95 shadow-sm'
                 }`}
                 aria-label={isFlipped ? card.name : `Carta ${idx + 1}`}
               >
                 {isFlipped ? (
-                  <div className="flex flex-col items-center justify-center animate-in zoom-in-75 duration-200 w-full">
-                    <span className="text-5xl sm:text-7xl mb-1">{card.icon}</span>
-                    <span className="font-black text-stone-950 text-sm sm:text-2xl text-center leading-tight break-words w-full px-0.5">
+                  <div className="flex items-center justify-center gap-3 sm:gap-4 animate-in zoom-in-75 duration-200 w-full px-2">
+                    <span className="text-5xl sm:text-7xl shrink-0">{card.icon}</span>
+                    <span className="font-black text-stone-950 text-xl sm:text-3xl text-left leading-tight">
                       {card.name}
                     </span>
                   </div>

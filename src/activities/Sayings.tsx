@@ -372,8 +372,8 @@ export function Sayings({ onComplete, onExit }: Props) {
           ¿Cómo continúa?
         </h3>
 
-        <div className="bg-emerald-50 border-2 sm:border-4 border-emerald-400 rounded-2xl sm:rounded-3xl p-4 sm:p-6 my-auto shrink-0">
-          <p className="font-black text-emerald-950 text-2xl sm:text-4xl leading-snug">
+        <div className="bg-emerald-50 border-3 sm:border-4 border-emerald-400 rounded-2xl sm:rounded-3xl p-4 sm:p-6 my-2 sm:my-3 flex-1 min-h-0 flex items-center justify-center">
+          <p className="font-black text-emerald-950 text-3xl sm:text-5xl leading-snug">
             "{currentSaying.start}"
           </p>
         </div>
@@ -384,7 +384,7 @@ export function Sayings({ onComplete, onExit }: Props) {
           </div>
         )}
 
-        <div className="flex flex-col gap-3 sm:gap-4 shrink-0 mt-auto">
+        <div className="flex flex-col gap-3 sm:gap-4 flex-1 min-h-0 justify-between">
           {options.map((option, idx) => {
             const isChosen = selectedOption === option
             const isCorrect = option === currentSaying.correct
@@ -403,7 +403,7 @@ export function Sayings({ onComplete, onExit }: Props) {
                 key={idx}
                 disabled={selectedOption !== null && isCorrect}
                 onClick={() => handleSelectOption(option)}
-                className={`w-full p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-3 sm:border-4 text-center font-black transition-all active:scale-[0.98] cursor-pointer min-h-[68px] sm:min-h-[92px] text-xl sm:text-3xl ${btnStyle}`}
+                className={`w-full flex-1 min-h-0 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-3 sm:border-4 flex items-center justify-center text-center font-black transition-all active:scale-[0.98] cursor-pointer text-2xl sm:text-4xl ${btnStyle}`}
               >
                 {option}
               </button>

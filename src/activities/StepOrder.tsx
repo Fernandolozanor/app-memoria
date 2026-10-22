@@ -649,7 +649,7 @@ export function StepOrder({ onComplete, onExit }: Props) {
         )}
 
         {/* Steps buttons - Flexible list filling available height */}
-        <div className="flex flex-col gap-1.5 sm:gap-3 w-full max-w-xl mx-auto flex-1 min-h-0 my-auto justify-between">
+        <div className="flex flex-col gap-2 sm:gap-3 w-full flex-1 min-h-0 justify-between">
           {displaySteps.map((step) => {
             const isCompleted = orderedStepIds.includes(step.id)
 
@@ -658,21 +658,21 @@ export function StepOrder({ onComplete, onExit }: Props) {
                 key={step.id}
                 disabled={isCompleted}
                 onClick={() => handleStepClick(step)}
-                className={`w-full p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border-2 sm:border-4 flex items-center gap-3 sm:gap-4 text-left font-black transition-all flex-1 min-h-[52px] sm:min-h-[74px] ${
+                className={`w-full p-3 sm:p-5 rounded-2xl sm:rounded-3xl border-3 sm:border-4 flex items-center gap-3 sm:gap-5 text-left font-black transition-all flex-1 min-h-0 ${
                   isCompleted
                     ? 'bg-emerald-100 border-emerald-500 opacity-60 cursor-default ring-2 ring-emerald-300'
                     : 'bg-stone-50 hover:bg-cyan-50 border-stone-300 hover:border-cyan-500 shadow-xs sm:shadow-md active:scale-[0.98] cursor-pointer'
                 }`}
                 aria-label={`${step.text} ${isCompleted ? '(completado)' : ''}`}
               >
-                <span className="text-4xl sm:text-6xl shrink-0" aria-hidden="true">
+                <span className="text-4xl sm:text-6xl shrink-0 leading-none" aria-hidden="true">
                   {step.icon}
                 </span>
-                <span className="flex-1 text-stone-950 font-black text-sm sm:text-2xl leading-snug">
+                <span className="flex-1 text-stone-950 font-black text-base sm:text-2xl leading-snug">
                   {step.text}
                 </span>
                 {isCompleted && (
-                  <span className="text-emerald-800 font-black text-sm sm:text-lg shrink-0">
+                  <span className="text-emerald-800 font-black text-base sm:text-xl shrink-0">
                     ✓ Hecho
                   </span>
                 )}
