@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { sound } from '../services/sound'
 import { speech } from '../services/speech'
-import { SpeakerButton } from '../components/SpeakerButton'
 import { SuccessCelebration } from '../components/SuccessCelebration'
 import { pickRandom, STEP_ORDER_VOICES } from '../services/voiceFeedback'
 
@@ -593,8 +592,9 @@ export function StepOrder({ onComplete, onExit }: Props) {
         }
 
         const completedVoice = pickRandom(STEP_ORDER_VOICES.completed)
+        const completedDuration = speech.estimateDurationMs(completedVoice)
         speech.speak(completedVoice, advance)
-        setTimeout(advance, 6000)
+        setTimeout(advance, completedDuration + 2500)
       } else {
         const nextPrompt = pickRandom(STEP_ORDER_VOICES.nextStep)(nextTarget)
         setFeedback(nextPrompt)
@@ -620,32 +620,30 @@ export function StepOrder({ onComplete, onExit }: Props) {
   return (
     <div className="flex-1 flex flex-col justify-between w-full max-w-2xl mx-auto overflow-hidden h-full">
       {/* Top bar */}
-      <div className="flex items-center justify-between bg-white rounded-2xl sm:rounded-3xl p-2 sm:p-4 border-2 sm:border-3 border-cyan-300 mb-1.5 sm:mb-4 shadow-xs shrink-0">
+      <div className="flex items-center justify-center bg-white rounded-2xl sm:rounded-3xl p-2 sm:p-3.5 border-2 sm:border-3 border-cyan-300 mb-1.5 sm:mb-3 shadow-xs shrink-0">
         <div className="flex items-center gap-2 sm:gap-3">
           <span className="font-black text-stone-900 text-base sm:text-2xl">Ronda:</span>
-          <span className="px-2.5 sm:px-4 py-1 sm:py-2 bg-cyan-100 text-cyan-950 font-black rounded-xl sm:rounded-2xl text-sm sm:text-2xl">
+          <span className="px-3 sm:px-4 py-1 sm:py-1.5 bg-cyan-100 text-cyan-950 font-black rounded-xl sm:rounded-2xl text-base sm:text-2xl">
             {roundIdx + 1} de 3 ({currentTask.steps.length} pasos)
           </span>
         </div>
-
-        <SpeakerButton text={`${currentTask.title}. ${promptText}`} label="Escuchar" />
       </div>
 
       <div className="flex-1 flex flex-col justify-between bg-white border-3 sm:border-4 border-cyan-400 rounded-2xl sm:rounded-3xl p-2.5 sm:p-7 shadow-md text-center min-h-0 overflow-hidden">
         <div className="shrink-0">
-          <h3 className="text-sm sm:text-2xl font-black text-cyan-950 mb-0.5 sm:mb-2 leading-tight break-words">
+          <h3 className="text-lg sm:text-2xl font-black text-cyan-950 mb-0.5 sm:mb-2 leading-tight break-words">
             {currentTask.title}
           </h3>
 
           <div className="bg-cyan-50 border-2 sm:border-3 border-cyan-300 rounded-xl sm:rounded-2xl p-1.5 sm:p-3 my-1 sm:my-2">
-            <p className="font-black text-cyan-950 text-base sm:text-2xl">
+            <p className="font-black text-cyan-950 text-lg sm:text-2xl">
               {promptText}
             </p>
           </div>
         </div>
 
         {feedback && (
-          <div className="p-1.5 sm:p-3 rounded-xl sm:rounded-2xl bg-amber-100 border-2 border-amber-400 text-amber-950 font-black text-xs sm:text-xl mb-1 sm:mb-3 animate-in fade-in shrink-0">
+          <div className="p-1.5 sm:p-3 rounded-xl sm:rounded-2xl bg-amber-100 border-2 border-amber-400 text-amber-950 font-black text-sm sm:text-xl mb-1 sm:mb-3 animate-in fade-in shrink-0">
             {feedback}
           </div>
         )}
@@ -660,21 +658,21 @@ export function StepOrder({ onComplete, onExit }: Props) {
                 key={step.id}
                 disabled={isCompleted}
                 onClick={() => handleStepClick(step)}
-                className={`w-full p-2 sm:p-4 rounded-xl sm:rounded-2xl border-2 sm:border-4 flex items-center gap-2.5 sm:gap-4 text-left font-black transition-all flex-1 min-h-[46px] sm:min-h-[68px] ${
+                className={`w-full p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border-2 sm:border-4 flex items-center gap-3 sm:gap-4 text-left font-black transition-all flex-1 min-h-[52px] sm:min-h-[74px] ${
                   isCompleted
                     ? 'bg-emerald-100 border-emerald-500 opacity-60 cursor-default ring-2 ring-emerald-300'
                     : 'bg-stone-50 hover:bg-cyan-50 border-stone-300 hover:border-cyan-500 shadow-xs sm:shadow-md active:scale-[0.98] cursor-pointer'
                 }`}
                 aria-label={`${step.text} ${isCompleted ? '(completado)' : ''}`}
               >
-                <span className="text-2xl sm:text-5xl shrink-0" aria-hidden="true">
+                <span className="text-4xl sm:text-6xl shrink-0" aria-hidden="true">
                   {step.icon}
                 </span>
-                <span className="flex-1 text-stone-950 font-black text-xs sm:text-xl leading-tight">
+                <span className="flex-1 text-stone-950 font-black text-sm sm:text-2xl leading-snug">
                   {step.text}
                 </span>
                 {isCompleted && (
-                  <span className="text-emerald-800 font-black text-xs sm:text-lg shrink-0">
+                  <span className="text-emerald-800 font-black text-sm sm:text-lg shrink-0">
                     ✓ Hecho
                   </span>
                 )}

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { sound } from '../services/sound'
 import { speech } from '../services/speech'
-import { SpeakerButton } from '../components/SpeakerButton'
 import { SuccessCelebration } from '../components/SuccessCelebration'
 import { pickRandom, MEMORY_PAIRS_VOICES } from '../services/voiceFeedback'
 
@@ -98,8 +97,9 @@ export function MemoryPairs({ onComplete, onExit }: Props) {
                 onComplete()
               }, 500)
             }
+            const praiseDuration = speech.estimateDurationMs(praise)
             speech.speak(praise, advance)
-            setTimeout(advance, 5000)
+            setTimeout(advance, praiseDuration + 2500)
           } else {
             speech.speak(praise)
           }
@@ -117,12 +117,12 @@ export function MemoryPairs({ onComplete, onExit }: Props) {
   return (
     <div className="flex-1 flex flex-col justify-between w-full max-w-2xl sm:max-w-3xl mx-auto overflow-hidden h-full">
       {/* Top Bar */}
-      <div className="flex items-center justify-between gap-2 bg-white rounded-2xl sm:rounded-3xl p-2 sm:p-4 border-2 sm:border-3 border-rose-300 mb-1.5 sm:mb-4 shadow-xs shrink-0">
+      <div className="flex items-center justify-center gap-2 bg-white rounded-2xl sm:rounded-3xl p-2 sm:p-3.5 border-2 sm:border-3 border-rose-300 mb-1.5 sm:mb-3 shadow-xs shrink-0">
         <div className="flex items-center gap-2 sm:gap-3">
           <span className="font-black text-stone-900 text-base sm:text-2xl">Nivel:</span>
           <button
             onClick={() => setLevel(3)}
-            className={`px-3 sm:px-5 py-1 sm:py-2 rounded-xl sm:rounded-2xl font-black text-sm sm:text-xl transition-all cursor-pointer ${
+            className={`px-3.5 sm:px-5 py-1 sm:py-2 rounded-xl sm:rounded-2xl font-black text-base sm:text-xl transition-all cursor-pointer ${
               level === 3
                 ? 'bg-rose-500 text-white shadow-xs'
                 : 'bg-stone-100 text-stone-800 hover:bg-stone-200'
@@ -132,7 +132,7 @@ export function MemoryPairs({ onComplete, onExit }: Props) {
           </button>
           <button
             onClick={() => setLevel(4)}
-            className={`px-3 sm:px-5 py-1 sm:py-2 rounded-xl sm:rounded-2xl font-black text-sm sm:text-xl transition-all cursor-pointer ${
+            className={`px-3.5 sm:px-5 py-1 sm:py-2 rounded-xl sm:rounded-2xl font-black text-base sm:text-xl transition-all cursor-pointer ${
               level === 4
                 ? 'bg-rose-500 text-white shadow-xs'
                 : 'bg-stone-100 text-stone-800 hover:bg-stone-200'
@@ -141,23 +141,21 @@ export function MemoryPairs({ onComplete, onExit }: Props) {
             4 parejas
           </button>
         </div>
-
-        <SpeakerButton text="Toca dos cartas para descubrir los dibujos y buscar las parejas iguales." />
       </div>
 
       <div className="flex-1 flex flex-col justify-between bg-white border-3 sm:border-4 border-stone-300 rounded-2xl sm:rounded-3xl p-2.5 sm:p-7 shadow-md min-h-0 overflow-hidden">
         <div className="text-center mb-1 sm:mb-3 shrink-0">
-          <h3 className="font-black text-lg sm:text-3xl text-stone-950">
+          <h3 className="font-black text-xl sm:text-3xl text-stone-950">
             Encuentra las parejas
           </h3>
-          <p className="text-stone-700 text-xs sm:text-xl font-bold mt-0.5">
+          <p className="text-stone-700 text-sm sm:text-xl font-bold mt-0.5">
             {matchedKeys.length} de {cards.length / 2} parejas encontradas
           </p>
         </div>
 
         {/* 6 or 8 cards grid - using 3 or 4 columns so it takes only 2 rows! */}
         <div
-          className={`grid gap-1.5 sm:gap-4 justify-center w-full max-w-xl mx-auto flex-1 min-h-0 my-auto ${
+          className={`grid gap-2 sm:gap-4 justify-center w-full max-w-xl mx-auto flex-1 min-h-0 my-auto ${
             level === 3 ? 'grid-cols-3' : 'grid-cols-4'
           }`}
         >
@@ -170,7 +168,7 @@ export function MemoryPairs({ onComplete, onExit }: Props) {
                 key={card.id}
                 onClick={() => handleCardClick(idx)}
                 disabled={isMatched || isLocked}
-                className={`w-full h-full rounded-2xl sm:rounded-3xl border-2 sm:border-4 transition-all duration-200 flex flex-col items-center justify-center p-1 sm:p-3 cursor-pointer select-none min-h-[58px] sm:min-h-[110px] ${
+                className={`w-full h-full rounded-2xl sm:rounded-3xl border-2 sm:border-4 transition-all duration-200 flex flex-col items-center justify-center p-1.5 sm:p-3 cursor-pointer select-none min-h-[70px] sm:min-h-[120px] ${
                   isFlipped
                     ? isMatched
                       ? 'bg-emerald-100 border-emerald-500 ring-2 sm:ring-4 ring-emerald-300 scale-95 shadow-xs'
@@ -181,13 +179,13 @@ export function MemoryPairs({ onComplete, onExit }: Props) {
               >
                 {isFlipped ? (
                   <div className="flex flex-col items-center justify-center animate-in zoom-in-75 duration-200 w-full">
-                    <span className="text-3xl sm:text-6xl mb-0.5">{card.icon}</span>
-                    <span className="font-black text-stone-950 text-[10px] sm:text-xl text-center leading-tight break-words w-full px-0.5">
+                    <span className="text-5xl sm:text-7xl mb-1">{card.icon}</span>
+                    <span className="font-black text-stone-950 text-sm sm:text-2xl text-center leading-tight break-words w-full px-0.5">
                       {card.name}
                     </span>
                   </div>
                 ) : (
-                  <span className="text-white font-black text-3xl sm:text-6xl">?</span>
+                  <span className="text-white font-black text-5xl sm:text-7xl">?</span>
                 )}
               </button>
             )

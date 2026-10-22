@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Volume2 } from 'lucide-react'
+import { RotateCcw } from 'lucide-react'
 import { sound } from '../services/sound'
 import { speech } from '../services/speech'
 import { SuccessCelebration } from '../components/SuccessCelebration'
@@ -118,14 +118,15 @@ export function SweetPiano({ onComplete, onExit }: Props) {
         ? 'Ronda 4. ¡Aparece la tecla verde! Escucha las 4 notas.'
         : `Ronda ${seq.length}. Escucha ${noteCountText}.`
 
+    const introDuration = speech.estimateDurationMs(introText)
     speech.speak(introText, () => {
       triggerNotes()
     })
 
-    // Safety fallback if speech onEnd doesn't trigger
+    // Safety fallback adapted to intro speech duration
     setTimeout(() => {
       triggerNotes()
-    }, 2800)
+    }, introDuration + 2000)
   }
 
   const startRound = (roundNum: number) => {
@@ -206,8 +207,9 @@ export function SweetPiano({ onComplete, onExit }: Props) {
         }
 
         const successVoice = pickRandom(SWEET_PIANO_VOICES.success)
+        const successDuration = speech.estimateDurationMs(successVoice)
         speech.speak(successVoice, advance)
-        roundAdvanceTimerRef.current = window.setTimeout(advance, 4000)
+        roundAdvanceTimerRef.current = window.setTimeout(advance, successDuration + 2200)
       }
     } else {
       // Incorrect note tapped: lock input immediately and let the speech finish completely
@@ -233,6 +235,7 @@ export function SweetPiano({ onComplete, onExit }: Props) {
 
       // Speak varied correction softly and ONLY restart once voice finishes speaking without re-announcing round
       const retryVoice = pickRandom(SWEET_PIANO_VOICES.gentleRetry)
+      const retryDuration = speech.estimateDurationMs(retryVoice)
       speech.speak(retryVoice, () => {
         triggerReplay()
       })
@@ -240,7 +243,7 @@ export function SweetPiano({ onComplete, onExit }: Props) {
       // Fallback timer if onEnd callback is delayed or unsupported
       retryTimerRef.current = window.setTimeout(() => {
         triggerReplay()
-      }, 3400)
+      }, retryDuration + 2000)
     }
   }
 
@@ -256,32 +259,21 @@ export function SweetPiano({ onComplete, onExit }: Props) {
   return (
     <div className="flex-1 flex flex-col justify-between w-full max-w-2xl mx-auto overflow-hidden h-full">
       {/* Top bar */}
-      <div className="flex items-center justify-between bg-white rounded-2xl sm:rounded-3xl p-2 sm:p-4 border-2 sm:border-3 border-violet-300 mb-1.5 sm:mb-4 shadow-xs shrink-0">
+      <div className="flex items-center justify-center bg-white rounded-2xl sm:rounded-3xl p-2 sm:p-3.5 border-2 sm:border-3 border-violet-300 mb-1.5 sm:mb-3 shadow-xs shrink-0">
         <div className="flex items-center gap-2 sm:gap-3">
           <span className="font-black text-stone-900 text-base sm:text-2xl">Ronda:</span>
-          <span className="px-2.5 sm:px-4 py-1 sm:py-2 bg-violet-100 text-violet-950 font-black rounded-xl sm:rounded-2xl text-sm sm:text-2xl">
+          <span className="px-3 sm:px-4 py-1 sm:py-1.5 bg-violet-100 text-violet-950 font-black rounded-xl sm:rounded-2xl text-base sm:text-2xl">
             {currentRound} de 4 ({currentRound} {currentRound === 1 ? 'nota' : 'notas'})
           </span>
         </div>
-
-        <button
-          onClick={handleRepeat}
-          disabled={isPlayingSeq}
-          className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-1.5 sm:py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl sm:rounded-2xl font-black text-sm sm:text-xl border-2 sm:border-3 border-blue-700 shadow-sm transition-all active:scale-95 cursor-pointer min-h-[42px] sm:min-h-[54px] disabled:opacity-50"
-          title="Repetir melodía"
-          aria-label="Repetir melodía"
-        >
-          <Volume2 className="w-4 h-4 sm:w-6 sm:h-6 text-white stroke-[2.5]" />
-          <span>Repetir</span>
-        </button>
       </div>
 
       <div className="flex-1 flex flex-col justify-between bg-white border-3 sm:border-4 border-violet-400 rounded-2xl sm:rounded-3xl p-2.5 sm:p-8 shadow-md text-center min-h-0 overflow-hidden">
         <div className="shrink-0">
-          <h3 className="text-lg sm:text-3xl font-black text-violet-950 mb-0.5 sm:mb-2">
+          <h3 className="text-xl sm:text-3xl font-black text-violet-950 mb-0.5 sm:mb-2">
             El Piano de Colores
           </h3>
-          <p className="text-xs sm:text-xl font-bold text-stone-700">
+          <p className="text-sm sm:text-xl font-bold text-stone-700">
             {isPlayingSeq ? 'Escuchando notas...' : 'Toca las notas que han sonado:'}
           </p>
         </div>
@@ -289,7 +281,7 @@ export function SweetPiano({ onComplete, onExit }: Props) {
         {/* Stable container: keeps fixed height so keys never shift position */}
         <div className="min-h-[42px] sm:min-h-[64px] flex items-center justify-center my-1 sm:my-2 shrink-0">
           <div
-            className={`w-full p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-violet-100 border-2 sm:border-3 border-violet-400 text-violet-950 font-black text-xs sm:text-xl transition-opacity duration-200 ${
+            className={`w-full p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-violet-100 border-2 sm:border-3 border-violet-400 text-violet-950 font-black text-sm sm:text-xl transition-opacity duration-200 ${
               feedback ? 'opacity-100' : 'opacity-0 pointer-events-none'
             }`}
           >
@@ -302,7 +294,7 @@ export function SweetPiano({ onComplete, onExit }: Props) {
           style={{
             gridTemplateColumns: currentRound === 4 ? 'repeat(4, minmax(0, 1fr))' : 'repeat(3, minmax(0, 1fr))',
           }}
-          className="grid gap-1.5 sm:gap-6 w-full max-w-xl mx-auto flex-1 min-h-0 my-auto items-stretch"
+          className="grid gap-2 sm:gap-6 w-full max-w-xl mx-auto flex-1 min-h-0 my-auto items-stretch"
         >
           {visibleKeys.map((k) => {
             const isLit = activeKey === k.id
@@ -311,20 +303,33 @@ export function SweetPiano({ onComplete, onExit }: Props) {
                 key={k.id}
                 disabled={isPlayingSeq}
                 onClick={() => handleKeyPress(k.id)}
-                className={`min-w-0 w-full h-full min-h-[90px] sm:min-h-[160px] max-h-[160px] sm:max-h-[240px] rounded-xl sm:rounded-3xl border-2 sm:border-4 transition-all duration-150 flex flex-col items-center justify-between py-2 sm:py-6 px-0.5 sm:px-2 cursor-pointer shadow-sm sm:shadow-lg active:scale-95 ${
+                className={`min-w-0 w-full h-full min-h-[110px] sm:min-h-[180px] max-h-[200px] sm:max-h-[280px] rounded-xl sm:rounded-3xl border-2 sm:border-4 transition-all duration-150 flex flex-col items-center justify-between py-3 sm:py-6 px-1 sm:px-2 cursor-pointer shadow-sm sm:shadow-lg active:scale-95 ${
                   isLit ? k.activeColor : `${k.color} opacity-95 hover:opacity-100`
                 }`}
                 aria-label={`Tecla ${k.noteName} ${k.label}`}
               >
-                <span className="text-xl sm:text-5xl font-black tracking-normal">
+                <span className="text-3xl sm:text-6xl font-black tracking-normal">
                   {k.noteName}
                 </span>
-                <span className="font-black text-[9px] sm:text-xl uppercase tracking-normal px-0.5 text-center leading-none w-full">
+                <span className="font-black text-sm sm:text-2xl uppercase tracking-normal px-0.5 text-center leading-none w-full">
                   {k.label}
                 </span>
               </button>
             )
           })}
+        </div>
+
+        <div className="flex justify-center mt-2 sm:mt-4 shrink-0">
+          <button
+            onClick={handleRepeat}
+            disabled={isPlayingSeq}
+            className="inline-flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-2 sm:py-3 bg-violet-50 hover:bg-violet-100 text-violet-950 font-bold text-sm sm:text-base rounded-xl sm:rounded-2xl border-2 border-violet-300 transition-all active:scale-95 cursor-pointer shadow-xs disabled:opacity-50"
+            title="Repetir melodía"
+            aria-label="Repetir melodía"
+          >
+            <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5 text-violet-700" />
+            <span>Volver a escuchar las notas</span>
+          </button>
         </div>
       </div>
 

@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { sound } from '../services/sound'
 import { speech } from '../services/speech'
-import { SpeakerButton } from '../components/SpeakerButton'
 import { SuccessCelebration } from '../components/SuccessCelebration'
 import { pickRandom, SAYINGS_VOICES } from '../services/voiceFeedback'
 
@@ -333,6 +332,7 @@ export function Sayings({ onComplete, onExit }: Props) {
       const fullText = `${praiseHeader} ${cleanStart} ${cleanCorrect}`
 
       // Wait until the voice finishes speaking before advancing
+      const fullDuration = speech.estimateDurationMs(fullText)
       speech.speak(fullText, () => {
         handleNextStep(round, sessionSayings.length)
       })
@@ -340,7 +340,7 @@ export function Sayings({ onComplete, onExit }: Props) {
       // Fallback in case audio is interrupted
       fallbackTimerRef.current = window.setTimeout(() => {
         handleNextStep(round, sessionSayings.length)
-      }, 7000)
+      }, fullDuration + 2500)
     } else {
       sound.playGentleRetry()
       const retryVoice = pickRandom(SAYINGS_VOICES.wrong)
@@ -358,35 +358,33 @@ export function Sayings({ onComplete, onExit }: Props) {
   return (
     <div className="flex-1 flex flex-col justify-between w-full max-w-2xl mx-auto overflow-hidden h-full">
       {/* Top bar */}
-      <div className="flex items-center justify-between bg-white rounded-2xl sm:rounded-3xl p-2 sm:p-4 border-2 sm:border-3 border-emerald-300 mb-1.5 sm:mb-4 shadow-xs shrink-0">
+      <div className="flex items-center justify-center bg-white rounded-2xl sm:rounded-3xl p-2 sm:p-3.5 border-2 sm:border-3 border-emerald-300 mb-1.5 sm:mb-3 shadow-xs shrink-0">
         <div className="flex items-center gap-2 sm:gap-3">
           <span className="font-black text-stone-900 text-base sm:text-2xl">Refrán:</span>
-          <span className="px-2.5 sm:px-4 py-1 sm:py-2 bg-emerald-100 text-emerald-900 font-black rounded-xl sm:rounded-2xl text-sm sm:text-xl">
+          <span className="px-3 sm:px-4 py-1 sm:py-1.5 bg-emerald-100 text-emerald-900 font-black rounded-xl sm:rounded-2xl text-base sm:text-2xl">
             {round + 1} de {sessionSayings.length}
           </span>
         </div>
-
-        <SpeakerButton text={`${currentSaying.start} ¿Cómo termina?`} />
       </div>
 
       <div className="flex-1 flex flex-col justify-between bg-white border-3 sm:border-4 border-emerald-400 rounded-2xl sm:rounded-3xl p-3 sm:p-8 shadow-md text-center min-h-0 overflow-hidden">
-        <h3 className="text-base sm:text-2xl font-black text-stone-800 shrink-0">
+        <h3 className="text-lg sm:text-2xl font-black text-stone-800 shrink-0">
           ¿Cómo continúa?
         </h3>
 
-        <div className="bg-emerald-50 border-2 sm:border-4 border-emerald-400 rounded-2xl sm:rounded-3xl p-3 sm:p-6 my-auto shrink-0">
-          <p className="font-black text-emerald-950 text-xl sm:text-4xl leading-snug">
+        <div className="bg-emerald-50 border-2 sm:border-4 border-emerald-400 rounded-2xl sm:rounded-3xl p-4 sm:p-6 my-auto shrink-0">
+          <p className="font-black text-emerald-950 text-2xl sm:text-4xl leading-snug">
             "{currentSaying.start}"
           </p>
         </div>
 
         {feedback && (
-          <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-amber-100 border-2 border-amber-400 text-amber-950 font-black text-sm sm:text-2xl mb-2 sm:mb-4 animate-in fade-in shrink-0">
+          <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-amber-100 border-2 border-amber-400 text-amber-950 font-black text-base sm:text-2xl mb-2 sm:mb-4 animate-in fade-in shrink-0">
             {feedback}
           </div>
         )}
 
-        <div className="flex flex-col gap-2.5 sm:gap-4 shrink-0 mt-auto">
+        <div className="flex flex-col gap-3 sm:gap-4 shrink-0 mt-auto">
           {options.map((option, idx) => {
             const isChosen = selectedOption === option
             const isCorrect = option === currentSaying.correct
@@ -405,7 +403,7 @@ export function Sayings({ onComplete, onExit }: Props) {
                 key={idx}
                 disabled={selectedOption !== null && isCorrect}
                 onClick={() => handleSelectOption(option)}
-                className={`w-full p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl border-3 sm:border-4 text-center font-black transition-all active:scale-[0.98] cursor-pointer min-h-[56px] sm:min-h-[84px] text-lg sm:text-3xl ${btnStyle}`}
+                className={`w-full p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-3 sm:border-4 text-center font-black transition-all active:scale-[0.98] cursor-pointer min-h-[68px] sm:min-h-[92px] text-xl sm:text-3xl ${btnStyle}`}
               >
                 {option}
               </button>

@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react'
 import { RotateCcw, ShoppingBag } from 'lucide-react'
 import { sound } from '../services/sound'
 import { speech } from '../services/speech'
-import { SpeakerButton } from '../components/SpeakerButton'
 import { SuccessCelebration } from '../components/SuccessCelebration'
 import { pickRandom, DAILY_COINS_VOICES } from '../services/voiceFeedback'
 
@@ -244,8 +243,9 @@ export function DailyCoins({ onComplete, onExit }: Props) {
         }, 500)
       }
 
+      const praiseDuration = speech.estimateDurationMs(praise)
       speech.speak(praise, advance)
-      setTimeout(advance, 8000)
+      setTimeout(advance, praiseDuration + 2500)
     } else if (newTotal > currentItem.targetCents) {
       sound.playGentleRetry()
       setFeedback(
@@ -298,9 +298,9 @@ export function DailyCoins({ onComplete, onExit }: Props) {
 
     if (isTaken) {
       return (
-        <div className="w-full h-full min-h-[52px] sm:min-h-[105px] rounded-2xl sm:rounded-3xl border-2 sm:border-3 border-dashed border-stone-300 bg-stone-100 flex flex-col items-center justify-center text-stone-400 p-1">
-          <span className="text-[10px] sm:text-base font-bold">Puesta</span>
-          <span className="text-xs sm:text-xl font-bold opacity-40">{coin.label}</span>
+        <div className="w-full h-full min-h-[60px] sm:min-h-[115px] rounded-2xl sm:rounded-3xl border-2 sm:border-3 border-dashed border-stone-300 bg-stone-100 flex flex-col items-center justify-center text-stone-400 p-1">
+          <span className="text-xs sm:text-lg font-bold">Puesta</span>
+          <span className="text-sm sm:text-xl font-bold opacity-50">{coin.label}</span>
         </div>
       )
     }
@@ -309,68 +309,68 @@ export function DailyCoins({ onComplete, onExit }: Props) {
       case '2e':
         return (
           <div
-            className={`${baseClasses} w-full h-full min-h-[52px] sm:min-h-[105px] bg-gradient-to-br from-stone-200 via-stone-300 to-stone-400 border-2 sm:border-4 border-amber-500 hover:border-amber-600 active:scale-95 py-1 sm:py-2`}
+            className={`${baseClasses} w-full h-full min-h-[60px] sm:min-h-[115px] bg-gradient-to-br from-stone-200 via-stone-300 to-stone-400 border-2 sm:border-4 border-amber-500 hover:border-amber-600 active:scale-95 py-1.5 sm:py-2`}
           >
-            <div className="w-9 h-9 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-amber-300 to-amber-500 border border-amber-600 flex items-center justify-center shadow-inner">
-              <span className="text-amber-950 text-base sm:text-3xl font-black">2€</span>
+            <div className="w-11 h-11 sm:w-18 sm:h-18 rounded-full bg-gradient-to-br from-amber-300 to-amber-500 border border-amber-600 flex items-center justify-center shadow-inner">
+              <span className="text-amber-950 text-lg sm:text-4xl font-black">2€</span>
             </div>
-            <span className="hidden sm:block text-stone-900 font-black text-xs sm:text-base mt-1">2 Euros</span>
+            <span className="hidden sm:block text-stone-900 font-black text-sm sm:text-lg mt-1">2 Euros</span>
           </div>
         )
       case '1e':
         return (
           <div
-            className={`${baseClasses} w-full h-full min-h-[52px] sm:min-h-[105px] bg-gradient-to-br from-amber-300 via-amber-400 to-amber-500 border-2 sm:border-4 border-stone-400 hover:border-stone-600 active:scale-95 py-1 sm:py-2`}
+            className={`${baseClasses} w-full h-full min-h-[60px] sm:min-h-[115px] bg-gradient-to-br from-amber-300 via-amber-400 to-amber-500 border-2 sm:border-4 border-stone-400 hover:border-stone-600 active:scale-95 py-1.5 sm:py-2`}
           >
-            <div className="w-9 h-9 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-stone-100 to-stone-300 border border-stone-400 flex items-center justify-center shadow-inner">
-              <span className="text-stone-900 text-base sm:text-3xl font-black">1€</span>
+            <div className="w-11 h-11 sm:w-18 sm:h-18 rounded-full bg-gradient-to-br from-stone-100 to-stone-300 border border-stone-400 flex items-center justify-center shadow-inner">
+              <span className="text-stone-900 text-lg sm:text-4xl font-black">1€</span>
             </div>
-            <span className="hidden sm:block text-amber-950 font-black text-xs sm:text-base mt-1">1 Euro</span>
+            <span className="hidden sm:block text-amber-950 font-black text-sm sm:text-lg mt-1">1 Euro</span>
           </div>
         )
       case '50c':
         return (
           <div
-            className={`${baseClasses} w-full h-full min-h-[52px] sm:min-h-[105px] bg-gradient-to-br from-amber-200 via-amber-300 to-amber-400 border-2 sm:border-4 border-amber-600 hover:border-amber-700 active:scale-95 py-1 sm:py-2`}
+            className={`${baseClasses} w-full h-full min-h-[60px] sm:min-h-[115px] bg-gradient-to-br from-amber-200 via-amber-300 to-amber-400 border-2 sm:border-4 border-amber-600 hover:border-amber-700 active:scale-95 py-1.5 sm:py-2`}
           >
-            <div className="w-8 h-8 sm:w-14 sm:h-14 rounded-full bg-amber-100 border border-amber-500 flex items-center justify-center shadow-inner">
-              <span className="text-amber-950 text-xs sm:text-2xl font-black">50c</span>
+            <div className="w-10 h-10 sm:w-16 sm:h-16 rounded-full bg-amber-100 border border-amber-500 flex items-center justify-center shadow-inner">
+              <span className="text-amber-950 text-sm sm:text-3xl font-black">50c</span>
             </div>
-            <span className="hidden sm:block text-amber-950 font-black text-xs sm:text-sm mt-1">50 céntimos</span>
+            <span className="hidden sm:block text-amber-950 font-black text-xs sm:text-base mt-1">50 céntimos</span>
           </div>
         )
       case '20c':
         return (
           <div
-            className={`${baseClasses} w-full h-full min-h-[52px] sm:min-h-[105px] bg-gradient-to-br from-amber-200 via-amber-300 to-amber-400 border-2 sm:border-4 border-amber-500 hover:border-amber-600 active:scale-95 py-1 sm:py-2`}
+            className={`${baseClasses} w-full h-full min-h-[60px] sm:min-h-[115px] bg-gradient-to-br from-amber-200 via-amber-300 to-amber-400 border-2 sm:border-4 border-amber-500 hover:border-amber-600 active:scale-95 py-1.5 sm:py-2`}
           >
-            <div className="w-8 h-8 sm:w-14 sm:h-14 rounded-full bg-amber-100 border border-amber-500 flex items-center justify-center shadow-inner">
-              <span className="text-amber-950 text-xs sm:text-2xl font-black">20c</span>
+            <div className="w-10 h-10 sm:w-16 sm:h-16 rounded-full bg-amber-100 border border-amber-500 flex items-center justify-center shadow-inner">
+              <span className="text-amber-950 text-sm sm:text-3xl font-black">20c</span>
             </div>
-            <span className="hidden sm:block text-amber-950 font-black text-xs sm:text-sm mt-1">20 céntimos</span>
+            <span className="hidden sm:block text-amber-950 font-black text-xs sm:text-base mt-1">20 céntimos</span>
           </div>
         )
       case '10c':
         return (
           <div
-            className={`${baseClasses} w-full h-full min-h-[52px] sm:min-h-[105px] bg-gradient-to-br from-amber-200 via-amber-300 to-amber-400 border-2 sm:border-4 border-amber-500 hover:border-amber-600 active:scale-95 py-1 sm:py-2`}
+            className={`${baseClasses} w-full h-full min-h-[60px] sm:min-h-[115px] bg-gradient-to-br from-amber-200 via-amber-300 to-amber-400 border-2 sm:border-4 border-amber-500 hover:border-amber-600 active:scale-95 py-1.5 sm:py-2`}
           >
-            <div className="w-7 h-7 sm:w-13 sm:h-13 rounded-full bg-amber-100 border border-amber-500 flex items-center justify-center shadow-inner">
-              <span className="text-amber-950 text-xs sm:text-2xl font-black">10c</span>
+            <div className="w-9 h-9 sm:w-15 sm:h-15 rounded-full bg-amber-100 border border-amber-500 flex items-center justify-center shadow-inner">
+              <span className="text-amber-950 text-sm sm:text-3xl font-black">10c</span>
             </div>
-            <span className="hidden sm:block text-amber-950 font-black text-xs sm:text-sm mt-1">10 céntimos</span>
+            <span className="hidden sm:block text-amber-950 font-black text-xs sm:text-base mt-1">10 céntimos</span>
           </div>
         )
       case '5c':
       default:
         return (
           <div
-            className={`${baseClasses} w-full h-full min-h-[52px] sm:min-h-[105px] bg-gradient-to-br from-orange-200 via-orange-300 to-orange-400 border-2 sm:border-4 border-orange-700 hover:border-orange-800 active:scale-95 py-1 sm:py-2`}
+            className={`${baseClasses} w-full h-full min-h-[60px] sm:min-h-[115px] bg-gradient-to-br from-orange-200 via-orange-300 to-orange-400 border-2 sm:border-4 border-orange-700 hover:border-orange-800 active:scale-95 py-1.5 sm:py-2`}
           >
-            <div className="w-7 h-7 sm:w-13 sm:h-13 rounded-full bg-orange-100 border border-orange-600 flex items-center justify-center shadow-inner">
-              <span className="text-orange-950 text-xs sm:text-2xl font-black">5c</span>
+            <div className="w-9 h-9 sm:w-15 sm:h-15 rounded-full bg-orange-100 border border-orange-600 flex items-center justify-center shadow-inner">
+              <span className="text-orange-950 text-sm sm:text-3xl font-black">5c</span>
             </div>
-            <span className="hidden sm:block text-orange-950 font-black text-xs sm:text-sm mt-1">5 céntimos</span>
+            <span className="hidden sm:block text-orange-950 font-black text-xs sm:text-base mt-1">5 céntimos</span>
           </div>
         )
     }
@@ -379,36 +379,31 @@ export function DailyCoins({ onComplete, onExit }: Props) {
   return (
     <div className="flex-1 flex flex-col justify-between w-full max-w-3xl mx-auto overflow-hidden h-full">
       {/* Top Header Bar */}
-      <div className="flex items-center justify-between bg-white rounded-2xl sm:rounded-3xl p-2 sm:p-4 border-2 sm:border-3 border-lime-300 mb-1 sm:mb-4 shadow-xs shrink-0">
+      <div className="flex items-center justify-center bg-white rounded-2xl sm:rounded-3xl p-2 sm:p-3.5 border-2 sm:border-3 border-lime-300 mb-1 sm:mb-3 shadow-xs shrink-0">
         <div className="flex items-center gap-2 sm:gap-3">
           <span className="font-black text-stone-900 text-base sm:text-2xl">Ronda:</span>
-          <span className="px-2.5 sm:px-4 py-1 sm:py-2 bg-lime-100 text-lime-950 font-black rounded-xl sm:rounded-2xl text-sm sm:text-2xl">
+          <span className="px-3 sm:px-4 py-1 sm:py-1.5 bg-lime-100 text-lime-950 font-black rounded-xl sm:rounded-2xl text-base sm:text-2xl">
             {roundIdx + 1} de 4 ({currentItem.requiredCoinCount} monedas)
           </span>
         </div>
-
-        <SpeakerButton
-          text={`${currentItem.name}. Cuesta ${currentItem.priceLabel}. Junta exactamente ${currentItem.requiredCoinCount} monedas para pagar el total.`}
-          label="Escuchar tarea"
-        />
       </div>
 
       <div className="flex-1 flex flex-col justify-between bg-white border-3 sm:border-4 border-lime-400 rounded-2xl sm:rounded-3xl p-2 sm:p-6 shadow-md text-center min-h-0 overflow-hidden">
         {/* Article title & emoji */}
-        <div className="flex items-center justify-center gap-2 mb-0.5 sm:mb-2 shrink-0">
-          <span className="text-2xl sm:text-5xl" aria-hidden="true">
+        <div className="flex items-center justify-center gap-2.5 mb-0.5 sm:mb-2 shrink-0">
+          <span className="text-4xl sm:text-6xl" aria-hidden="true">
             {currentItem.emoji}
           </span>
-          <h3 className="text-lg sm:text-3xl font-black text-stone-950 leading-tight">
+          <h3 className="text-xl sm:text-3xl font-black text-stone-950 leading-tight">
             {currentItem.name}
           </h3>
         </div>
 
         {/* Goal badge */}
-        <div className="inline-flex flex-wrap items-center justify-center gap-2 sm:gap-4 bg-lime-100 border-2 sm:border-3 border-lime-400 text-lime-950 px-3 sm:px-8 py-1 sm:py-3 rounded-xl sm:rounded-3xl my-0.5 sm:my-2 shrink-0 mx-auto">
-          <span className="text-sm sm:text-2xl font-bold">Precio a pagar:</span>
-          <span className="text-xl sm:text-4xl font-black">{currentItem.priceLabel}</span>
-          <span className="text-xs sm:text-xl font-black bg-white px-2 sm:px-3 py-0.5 sm:py-1.5 rounded-lg border border-lime-300 text-lime-900">
+        <div className="inline-flex flex-wrap items-center justify-center gap-2 sm:gap-4 bg-lime-100 border-2 sm:border-3 border-lime-400 text-lime-950 px-3 sm:px-8 py-1.5 sm:py-3 rounded-xl sm:rounded-3xl my-0.5 sm:my-2 shrink-0 mx-auto">
+          <span className="text-base sm:text-2xl font-bold">Precio a pagar:</span>
+          <span className="text-2xl sm:text-4xl font-black">{currentItem.priceLabel}</span>
+          <span className="text-sm sm:text-xl font-black bg-white px-2.5 sm:px-3 py-0.5 sm:py-1.5 rounded-lg border border-lime-300 text-lime-900">
             en {currentItem.requiredCoinCount} monedas
           </span>
         </div>

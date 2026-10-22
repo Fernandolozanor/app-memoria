@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react'
 import { Check, ShoppingBag, Eye } from 'lucide-react'
 import { sound } from '../services/sound'
 import { speech } from '../services/speech'
-import { SpeakerButton } from '../components/SpeakerButton'
 import { SuccessCelebration } from '../components/SuccessCelebration'
 
 interface Props {
@@ -240,8 +239,9 @@ export function ShoppingList({ onComplete, onExit }: Props) {
             }, 500)
           }
 
+          const completeDuration = speech.estimateDurationMs(currentTexts.roundCompleteSpeech)
           speech.speak(currentTexts.roundCompleteSpeech, advance)
-          setTimeout(advance, 7000)
+          setTimeout(advance, completeDuration + 2500)
         } else {
           // Speak a brief warm confirmation for this item
           speech.speak(`¡Muy bien, ${product.name}!`)
@@ -263,33 +263,22 @@ export function ShoppingList({ onComplete, onExit }: Props) {
     setIsSuccess(false)
   }
 
-  const targetNames = targetItems.map((t) => t.name).join(', ')
-
   return (
     <div className="flex-1 flex flex-col justify-between w-full max-w-3xl mx-auto overflow-hidden h-full">
       {/* Top Bar with round progress */}
-      <div className="flex items-center justify-between gap-2 bg-white rounded-2xl sm:rounded-3xl p-2 sm:p-4 border-2 sm:border-3 border-amber-300 mb-1.5 sm:mb-4 shadow-xs shrink-0">
+      <div className="flex items-center justify-center gap-2 bg-white rounded-2xl sm:rounded-3xl p-2 sm:p-3.5 border-2 sm:border-3 border-amber-300 mb-1.5 sm:mb-3 shadow-xs shrink-0">
         <div className="flex items-center gap-2 sm:gap-3">
           <span className="font-black text-stone-900 text-base sm:text-2xl">Ronda:</span>
-          <span className="px-2.5 sm:px-4 py-1 sm:py-2 bg-amber-100 text-amber-950 font-black rounded-xl sm:rounded-2xl text-sm sm:text-2xl">
+          <span className="px-3 sm:px-4 py-1 sm:py-1.5 bg-amber-100 text-amber-950 font-black rounded-xl sm:rounded-2xl text-base sm:text-2xl">
             {roundIdx + 1} de 3 ({currentConfig.choiceCount} productos)
           </span>
         </div>
-
-        <SpeakerButton
-          text={
-            phase === 'memorize'
-              ? currentTexts.memorizeSpeaker(targetNames)
-              : currentTexts.recallSpeaker(currentConfig.choiceCount)
-          }
-          label="Escuchar"
-        />
       </div>
 
       {phase === 'memorize' && (
         <div className="flex-1 flex flex-col justify-between bg-white border-3 sm:border-4 border-amber-400 rounded-2xl sm:rounded-3xl p-3 sm:p-7 text-center shadow-md min-h-0 overflow-hidden">
           <div className="shrink-0">
-            <div className="inline-flex items-center gap-2 text-amber-950 font-black text-lg sm:text-3xl mb-1 sm:mb-2">
+            <div className="inline-flex items-center gap-2 text-amber-950 font-black text-xl sm:text-3xl mb-1 sm:mb-2">
               <Eye className="w-6 h-6 sm:w-10 sm:h-10 text-amber-600 stroke-[2.5]" />
               <span>Recuerda estos {targetItems.length} alimentos:</span>
             </div>
@@ -299,16 +288,16 @@ export function ShoppingList({ onComplete, onExit }: Props) {
             </p>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-2.5 sm:gap-6 my-auto shrink-0">
+          <div className="flex flex-wrap justify-center gap-3 sm:gap-6 my-auto shrink-0">
             {targetItems.map((item) => (
               <div
                 key={item.id}
-                className="bg-amber-50 rounded-2xl sm:rounded-3xl p-3 sm:p-6 border-2 sm:border-3 border-amber-300 shadow-sm flex flex-col items-center w-28 sm:w-44"
+                className="bg-amber-50 rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 border-2 sm:border-3 border-amber-300 shadow-sm flex flex-col items-center w-36 sm:w-52"
               >
-                <span className="text-5xl sm:text-7xl mb-1 sm:mb-2" aria-hidden="true">
+                <span className="text-6xl sm:text-8xl mb-1.5 sm:mb-2" aria-hidden="true">
                   {item.icon}
                 </span>
-                <span className="font-black text-stone-950 text-sm sm:text-2xl text-center leading-tight">
+                <span className="font-black text-stone-950 text-base sm:text-3xl text-center leading-tight">
                   {item.name}
                 </span>
               </div>
@@ -317,7 +306,7 @@ export function ShoppingList({ onComplete, onExit }: Props) {
 
           <button
             onClick={handleFinishMemorizing}
-            className="w-full py-3 sm:py-5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl sm:rounded-3xl font-black text-lg sm:text-3xl shadow-md border-2 sm:border-3 border-emerald-700 transition-all active:scale-95 cursor-pointer min-h-[50px] sm:min-h-[72px] shrink-0 mt-auto"
+            className="w-full py-3 sm:py-5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl sm:rounded-3xl font-black text-lg sm:text-3xl shadow-md border-2 sm:border-3 border-emerald-700 transition-all active:scale-95 cursor-pointer min-h-[52px] sm:min-h-[72px] shrink-0 mt-auto"
           >
             {currentTexts.memorizeButton}
           </button>
@@ -333,13 +322,13 @@ export function ShoppingList({ onComplete, onExit }: Props) {
                 {currentTexts.recallTitle}
               </h3>
             </div>
-            <span className="font-black text-xs sm:text-lg text-emerald-950 bg-emerald-100 px-2 sm:px-3 py-1 rounded-xl border border-emerald-400">
+            <span className="font-black text-sm sm:text-lg text-emerald-950 bg-emerald-100 px-2.5 sm:px-3 py-1 rounded-xl border border-emerald-400">
               {selectedIds.length} de {targetItems.length}
             </span>
           </div>
 
           {hintMessage && (
-            <div className="text-xs sm:text-xl font-black text-stone-900 bg-amber-100 p-1.5 sm:p-3 rounded-xl sm:rounded-2xl border border-amber-300 text-center shrink-0">
+            <div className="text-sm sm:text-xl font-black text-stone-900 bg-amber-100 p-1.5 sm:p-3 rounded-xl sm:rounded-2xl border border-amber-300 text-center shrink-0">
               {hintMessage}
             </div>
           )}
@@ -361,7 +350,7 @@ export function ShoppingList({ onComplete, onExit }: Props) {
                   key={item.id}
                   disabled={isFound}
                   onClick={() => handleSelectProduct(item)}
-                  className={`relative p-1.5 sm:p-3 rounded-xl sm:rounded-2xl border-2 sm:border-3 flex flex-col items-center justify-center transition-all cursor-pointer h-full min-h-[50px] sm:min-h-[100px] ${
+                  className={`relative p-1.5 sm:p-3 rounded-xl sm:rounded-2xl border-2 sm:border-3 flex flex-col items-center justify-center transition-all cursor-pointer h-full min-h-[60px] sm:min-h-[110px] ${
                     isFound
                       ? 'bg-emerald-100 border-emerald-500 opacity-90 cursor-default ring-2 ring-emerald-300 scale-95'
                       : 'bg-stone-50 hover:bg-amber-50 border-stone-300 hover:border-amber-400 shadow-xs active:scale-95'
@@ -375,13 +364,17 @@ export function ShoppingList({ onComplete, onExit }: Props) {
                   )}
                   <span
                     className={`${
-                      currentConfig.choiceCount >= 10 ? 'text-2xl sm:text-5xl' : 'text-3xl sm:text-6xl'
-                    } mb-0.5`}
+                      currentConfig.choiceCount >= 10 ? 'text-3xl sm:text-6xl' : 'text-5xl sm:text-7xl'
+                    } mb-1`}
                     aria-hidden="true"
                   >
                     {item.icon}
                   </span>
-                  <span className="font-black text-stone-950 text-[10px] sm:text-lg text-center leading-tight break-words w-full px-0.5">
+                  <span
+                    className={`font-black text-stone-950 ${
+                      currentConfig.choiceCount === 6 ? 'text-sm sm:text-2xl' : 'text-xs sm:text-xl'
+                    } text-center leading-tight break-words w-full px-0.5`}
+                  >
                     {item.name}
                   </span>
                 </button>

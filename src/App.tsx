@@ -9,7 +9,6 @@ import { sound } from './services/sound'
 import { speech } from './services/speech'
 import { Header } from './components/Header'
 import { ActivityCard } from './components/ActivityCard'
-import { SpeakerButton } from './components/SpeakerButton'
 import { VoiceModal } from './components/VoiceModal'
 
 // Import all 10 activities
@@ -28,7 +27,6 @@ export function App() {
   const initialActivity = (new URLSearchParams(window.location.search).get('activity') as ActivityId) || null
   const [currentActivity, setCurrentActivity] = useState<ActivityId | null>(initialActivity)
   const [stats, setStats] = useState<UserStats>(loadUserStats)
-  const [selectedCategory, setSelectedCategory] = useState<string>('Todas')
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false)
 
   const handleSelectActivity = (id: ActivityId) => {
@@ -49,95 +47,33 @@ export function App() {
   }
 
   const activeActivityMeta = ACTIVITIES.find((a) => a.id === currentActivity)
-  const categories = ['Todas', 'Memoria', 'Atención', 'Lenguaje', 'Lógica']
-
-  const filteredActivities =
-    selectedCategory === 'Todas'
-      ? ACTIVITIES
-      : ACTIVITIES.filter((a) => {
-          if (selectedCategory === 'Lógica') return a.category.includes('Lógica')
-          return a.category === selectedCategory
-        })
 
   return (
     <div className="h-[100dvh] flex flex-col bg-[#FDFBF7] text-stone-900 overflow-hidden select-none">
-      {/* Accessible Header */}
+      {/* Simplified Header */}
       <Header
-        title={activeActivityMeta ? activeActivityMeta.title : 'Memoria'}
+        title={activeActivityMeta ? activeActivityMeta.title : undefined}
         subtitle={activeActivityMeta ? activeActivityMeta.subtitle : undefined}
         onBack={currentActivity ? handleBackToMenu : undefined}
         stars={stats.stars}
         onOpenVoiceModal={() => setIsVoiceModalOpen(true)}
-        onReadHeader={() => {
-          if (activeActivityMeta) {
-            speech.speak(`${activeActivityMeta.title}. ${activeActivityMeta.description}`)
-          } else {
-            speech.speak('Menú de juegos. Toca cualquier actividad para empezar.')
-          }
-        }}
       />
 
       {/* Main Container - 100% full height zero-scroll on mobile, smoothly adaptable on tablet/desktop */}
-      <main className="flex-1 flex flex-col min-h-0 max-w-4xl mx-auto w-full px-2 sm:px-6 py-1 sm:py-4 overflow-hidden sm:overflow-y-auto">
+      <main className="flex-1 flex flex-col min-h-0 max-w-4xl mx-auto w-full px-2 sm:px-6 py-1.5 sm:py-4 overflow-hidden sm:overflow-y-auto">
         {!currentActivity ? (
           /* Catalog View - Super Clean, 100% full screen on mobile without scroll */
-          <div className="flex-1 flex flex-col min-h-0 gap-1.5 sm:gap-3 overflow-hidden">
+          <div className="flex-1 flex flex-col min-h-0 gap-2 sm:gap-3 overflow-hidden">
             {/* Direct Greeting Banner */}
-            <div className="bg-gradient-to-r from-amber-100 via-orange-50 to-emerald-50 rounded-xl sm:rounded-3xl p-1.5 sm:p-4 border-2 sm:border-3 border-amber-300 shadow-xs sm:shadow-md flex items-center justify-between gap-2 shrink-0">
-              <div>
-                <h2 className="text-base sm:text-3xl md:text-4xl font-black text-stone-950 leading-tight">
-                  ¿A qué jugamos hoy? 🌸
-                </h2>
-                <p className="hidden sm:block text-lg sm:text-2xl font-bold text-stone-700 mt-1">
-                  Toca una actividad para comenzar:
-                </p>
-              </div>
-
-              <SpeakerButton
-                text="¿A qué jugamos hoy? Toca cualquier recuadro de la pantalla para empezar a jugar."
-                label="Escuchar"
-                className="shrink-0"
-              />
+            <div className="bg-gradient-to-r from-amber-100 via-orange-50 to-emerald-50 rounded-xl sm:rounded-3xl py-2 px-3 sm:p-4 border-2 sm:border-3 border-amber-300 shadow-xs sm:shadow-md flex items-center justify-center text-center shrink-0">
+              <h2 className="text-lg sm:text-3xl md:text-4xl font-black text-stone-950 leading-tight">
+                ¿A qué jugamos hoy? 🌸
+              </h2>
             </div>
 
-            {/* Category Filter Pills - Spanning full width */}
-            <div className="flex w-full gap-1 sm:gap-3 shrink-0">
-              {categories.map((cat) => {
-                const isSelected = selectedCategory === cat
-                return (
-                  <button
-                    key={cat}
-                    onClick={() => {
-                      sound.playTap()
-                      setSelectedCategory(cat)
-                    }}
-                    className={`flex-1 flex items-center justify-center py-1 sm:py-3 px-0.5 sm:px-2 rounded-lg sm:rounded-2xl font-black text-xs sm:text-xl border-2 sm:border-3 transition-all cursor-pointer min-h-[32px] sm:min-h-[50px] text-center ${
-                      isSelected
-                        ? 'bg-emerald-700 text-white border-emerald-900 shadow-xs sm:shadow-md ring-2 sm:ring-4 ring-emerald-300/70'
-                        : 'bg-white text-stone-800 border-stone-300 hover:bg-stone-50 hover:border-stone-400'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                )
-              })}
-            </div>
-
-            {/* Activities Grid - 2 columns, fills available screen space, stretching cards to occupy the vertical space */}
-            <div
-              className={`grid grid-cols-2 ${
-                filteredActivities.length >= 9
-                  ? 'grid-rows-5'
-                  : filteredActivities.length >= 7
-                  ? 'grid-rows-4'
-                  : filteredActivities.length >= 5
-                  ? 'grid-rows-3'
-                  : filteredActivities.length >= 3
-                  ? 'grid-rows-2'
-                  : 'grid-rows-1'
-              } gap-1.5 sm:gap-3 flex-1 min-h-0 w-full`}
-            >
-              {filteredActivities.map((activity) => (
+            {/* Activities Grid - 2 columns, 5 rows, fills available screen space */}
+            <div className="grid grid-cols-2 grid-rows-5 gap-2 sm:gap-3.5 flex-1 min-h-0 w-full">
+              {ACTIVITIES.map((activity) => (
                 <ActivityCard
                   key={activity.id}
                   activity={activity}

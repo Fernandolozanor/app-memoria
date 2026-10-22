@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { sound } from '../services/sound'
 import { speech } from '../services/speech'
-import { SpeakerButton } from '../components/SpeakerButton'
 import { SuccessCelebration } from '../components/SuccessCelebration'
 import { pickRandom, ODD_ONE_OUT_VOICES } from '../services/voiceFeedback'
 
@@ -227,34 +226,69 @@ function generateSessionRounds(): RoundData[] {
 export function OddOneOut({ onComplete, onExit }: Props) {
   const [roundIdx, setRoundIdx] = useState(0) // 0 (4 cards), 1 (5 cards), 2 (6 cards)
   const [sessionRounds, setSessionRounds] = useState<RoundData[]>(generateSessionRounds)
+  const [visibleCardIds, setVisibleCardIds] = useState<string[]>([])
+  const [selectedOddId, setSelectedOddId] = useState<string | null>(null)
   const [feedback, setFeedback] = useState('')
   const [isSuccess, setIsSuccess] = useState(false)
   const isAdvancingRef = useRef(false)
+  const timeoutsRef = useRef<number[]>([])
+
+  const clearAllTimeouts = () => {
+    timeoutsRef.current.forEach((id) => clearTimeout(id))
+    timeoutsRef.current = []
+  }
+
+  const addTimeout = (fn: () => void, delayMs: number) => {
+    const id = window.setTimeout(fn, delayMs)
+    timeoutsRef.current.push(id)
+    return id
+  }
 
   const currentRound = sessionRounds[roundIdx] || sessionRounds[0]
 
   useEffect(() => {
+    clearAllTimeouts()
     setFeedback('')
     setIsSuccess(false)
+    setSelectedOddId(null)
+    setVisibleCardIds([])
     isAdvancingRef.current = false
 
-    const timer = setTimeout(() => {
-      const introVoice = pickRandom(ODD_ONE_OUT_VOICES.intro)(currentRound.family.category)
-      speech.speak(introVoice)
-    }, 250)
+    const introVoice = pickRandom(ODD_ONE_OUT_VOICES.intro)(currentRound.family.category)
+    const estimatedMs = speech.estimateDurationMs(introVoice)
+    const allCardIds = currentRound.cards.map((c) => c.id)
+    const shuffledIds = [...allCardIds].sort(() => 0.5 - Math.random())
+
+    // Pace card flips across the duration of the intro locution so they finish right with the voice
+    const stepDelay = Math.max(250, Math.floor((estimatedMs * 0.78) / Math.max(1, shuffledIds.length)))
+
+    shuffledIds.forEach((cardId, idx) => {
+      addTimeout(() => {
+        sound.playTap()
+        setVisibleCardIds((prev) => (prev.includes(cardId) ? prev : [...prev, cardId]))
+      }, 200 + idx * stepDelay)
+    })
+
+    addTimeout(() => {
+      speech.speak(introVoice, () => {
+        // Ensure all cards are revealed as soon as the voice finishes
+        setVisibleCardIds(allCardIds)
+      })
+    }, 200)
 
     return () => {
-      clearTimeout(timer)
+      clearAllTimeouts()
       speech.stop()
     }
   }, [roundIdx, sessionRounds])
 
   const handleCardClick = (card: CardItem) => {
-    if (isAdvancingRef.current) return
+    if (isAdvancingRef.current || !visibleCardIds.includes(card.id)) return
     sound.playTap()
 
     if (card.isOdd) {
       isAdvancingRef.current = true
+      setSelectedOddId(card.id)
       sound.playSuccess()
       const praise = pickRandom(ODD_ONE_OUT_VOICES.correct)(card.name, currentRound.family.category)
       setFeedback(praise)
@@ -263,18 +297,19 @@ export function OddOneOut({ onComplete, onExit }: Props) {
       const advance = () => {
         if (hasAdv) return
         hasAdv = true
-        setTimeout(() => {
+        addTimeout(() => {
           if (roundIdx + 1 < sessionRounds.length) {
             setRoundIdx((prev) => prev + 1)
           } else {
             setIsSuccess(true)
             onComplete()
           }
-        }, 500)
+        }, 450)
       }
 
+      const praiseDuration = speech.estimateDurationMs(praise)
       speech.speak(praise, advance)
-      setTimeout(advance, 7000)
+      addTimeout(advance, praiseDuration + 2500)
     } else {
       sound.playGentleRetry()
       const wrongMsg = pickRandom(ODD_ONE_OUT_VOICES.wrong)(currentRound.family.category)
@@ -284,6 +319,7 @@ export function OddOneOut({ onComplete, onExit }: Props) {
   }
 
   const handleRestart = () => {
+    clearAllTimeouts()
     setSessionRounds(generateSessionRounds())
     setRoundIdx(0)
     setIsSuccess(false)
@@ -292,32 +328,27 @@ export function OddOneOut({ onComplete, onExit }: Props) {
   return (
     <div className="flex-1 flex flex-col justify-between w-full max-w-2xl mx-auto overflow-hidden h-full">
       {/* Top Header Bar */}
-      <div className="flex items-center justify-between bg-white rounded-2xl sm:rounded-3xl p-2 sm:p-4 border-2 sm:border-3 border-purple-300 mb-1.5 sm:mb-4 shadow-xs shrink-0">
+      <div className="flex items-center justify-center bg-white rounded-2xl sm:rounded-3xl p-2 sm:p-3.5 border-2 sm:border-3 border-purple-300 mb-1.5 sm:mb-3 shadow-xs shrink-0">
         <div className="flex items-center gap-2 sm:gap-3">
           <span className="font-black text-stone-900 text-base sm:text-2xl">Ronda:</span>
-          <span className="px-2.5 sm:px-4 py-1 sm:py-2 bg-purple-100 text-purple-950 font-black rounded-xl sm:rounded-2xl text-sm sm:text-2xl">
+          <span className="px-3 sm:px-4 py-1 sm:py-1.5 bg-purple-100 text-purple-950 font-black rounded-xl sm:rounded-2xl text-base sm:text-2xl">
             {roundIdx + 1} de 3 ({currentRound.cardCount} cartas)
           </span>
         </div>
-
-        <SpeakerButton
-          text={`Toca el dibujo diferente. ¿Cuál no pertenece a ${currentRound.family.category}?`}
-          label="Escuchar"
-        />
       </div>
 
       <div className="flex-1 flex flex-col justify-between bg-white border-3 sm:border-4 border-purple-400 rounded-2xl sm:rounded-3xl p-2.5 sm:p-8 shadow-md text-center min-h-0 overflow-hidden">
         <div className="shrink-0">
-          <h3 className="text-lg sm:text-3xl font-black text-stone-950 mb-0.5 sm:mb-2">
+          <h3 className="text-xl sm:text-3xl font-black text-stone-950 mb-0.5 sm:mb-2">
             ¿Cuál es el intruso?
           </h3>
-          <p className="text-xs sm:text-xl font-bold text-stone-700">
+          <p className="text-sm sm:text-xl font-bold text-stone-700">
             Toca el que <span className="text-purple-700 underline font-black">NO</span> pertenece a {currentRound.family.category}:
           </p>
         </div>
 
         {feedback && (
-          <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-purple-100 border-2 border-purple-400 text-purple-950 font-black text-sm sm:text-2xl mb-1 sm:mb-4 animate-in fade-in shrink-0">
+          <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-purple-100 border-2 border-purple-400 text-purple-950 font-black text-base sm:text-2xl mb-1 sm:mb-4 animate-in fade-in shrink-0">
             {feedback}
           </div>
         )}
@@ -328,21 +359,41 @@ export function OddOneOut({ onComplete, onExit }: Props) {
             currentRound.cardCount === 4 ? 'grid-cols-2' : 'grid-cols-3'
           }`}
         >
-          {currentRound.cards.map((card) => (
-            <button
-              key={card.id}
-              onClick={() => handleCardClick(card)}
-              className="p-2 sm:p-5 rounded-2xl sm:rounded-3xl bg-stone-50 hover:bg-purple-50 border-2 sm:border-4 border-stone-300 hover:border-purple-500 shadow-xs sm:shadow-md active:scale-95 flex flex-col items-center justify-center h-full min-h-[64px] sm:min-h-[150px] transition-all cursor-pointer"
-              aria-label={card.name}
-            >
-              <span className="text-3xl sm:text-6xl mb-0.5 sm:mb-1" aria-hidden="true">
-                {card.icon}
-              </span>
-              <span className="font-black text-stone-950 text-xs sm:text-xl text-center leading-tight break-words w-full px-1">
-                {card.name}
-              </span>
-            </button>
-          ))}
+          {currentRound.cards.map((card) => {
+            const isVisible = visibleCardIds.includes(card.id)
+            const isSelectedOdd = selectedOddId === card.id
+
+            return (
+              <button
+                key={card.id}
+                disabled={!isVisible || isAdvancingRef.current}
+                onClick={() => handleCardClick(card)}
+                className={`p-2 sm:p-5 rounded-2xl sm:rounded-3xl border-2 sm:border-4 flex flex-col items-center justify-center h-full min-h-[76px] sm:min-h-[155px] transition-all duration-300 ${
+                  !isVisible
+                    ? 'bg-purple-50/60 border-dashed border-purple-200 cursor-default scale-95 opacity-50'
+                    : isSelectedOdd
+                    ? 'bg-emerald-100 border-emerald-500 ring-4 ring-emerald-300 scale-105 shadow-md cursor-default'
+                    : 'bg-stone-50 hover:bg-purple-50 border-stone-300 hover:border-purple-500 shadow-xs sm:shadow-md active:scale-95 cursor-pointer'
+                }`}
+                aria-label={isVisible ? card.name : 'Tarjeta por descubrir'}
+              >
+                {isVisible ? (
+                  <>
+                    <span className="text-5xl sm:text-7xl mb-1 sm:mb-2 animate-in zoom-in-75 duration-200" aria-hidden="true">
+                      {card.icon}
+                    </span>
+                    <span className="font-black text-stone-950 text-base sm:text-2xl text-center leading-tight break-words w-full px-1">
+                      {card.name}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-purple-300 font-black text-4xl sm:text-6xl select-none animate-pulse">
+                    ?
+                  </span>
+                )}
+              </button>
+            )
+          })}
         </div>
       </div>
 

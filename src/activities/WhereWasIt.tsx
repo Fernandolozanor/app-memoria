@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react'
 import { RotateCcw } from 'lucide-react'
 import { sound } from '../services/sound'
 import { speech } from '../services/speech'
-import { SpeakerButton } from '../components/SpeakerButton'
 import { SuccessCelebration } from '../components/SuccessCelebration'
 import { pickRandom, WHERE_WAS_IT_VOICES } from '../services/voiceFeedback'
 
@@ -39,25 +38,25 @@ const ROUND_CONFIGS = [
     totalCards: 9,
     flippedCount: 3,
     gridCols: 'grid-cols-3',
-    maxW: 'max-w-xs sm:max-w-md',
-    cardMaxH: 'max-h-[82px] sm:max-h-[125px]',
-    iconSize: 'text-3xl sm:text-5xl',
+    maxW: 'max-w-sm sm:max-w-lg',
+    cardMaxH: 'max-h-[96px] sm:max-h-[140px]',
+    iconSize: 'text-4xl sm:text-6xl',
   },
   {
     totalCards: 12,
     flippedCount: 4,
     gridCols: 'grid-cols-4',
-    maxW: 'max-w-sm sm:max-w-lg',
-    cardMaxH: 'max-h-[76px] sm:max-h-[115px]',
-    iconSize: 'text-2xl sm:text-4xl',
+    maxW: 'max-w-md sm:max-w-xl',
+    cardMaxH: 'max-h-[86px] sm:max-h-[125px]',
+    iconSize: 'text-4xl sm:text-6xl',
   },
   {
     totalCards: 16,
     flippedCount: 5,
     gridCols: 'grid-cols-4',
-    maxW: 'max-w-xs sm:max-w-md',
-    cardMaxH: 'max-h-[64px] sm:max-h-[96px]',
-    iconSize: 'text-2xl sm:text-4xl',
+    maxW: 'max-w-sm sm:max-w-lg',
+    cardMaxH: 'max-h-[72px] sm:max-h-[108px]',
+    iconSize: 'text-3xl sm:text-5xl',
   },
 ]
 
@@ -175,8 +174,11 @@ export function WhereWasIt({ onComplete, onExit }: Props) {
 
     const totalRevealTime = (revealOrder.length + 1) * 150
 
-    // 2. Once all flipped cards are revealed, start voice locution
+    // 2. Once all flipped cards are revealed, start voice locution & adapt reverse hiding to speech duration
     addTimeout(() => {
+      const explanationVoice = pickRandom(WHERE_WAS_IT_VOICES.showing)(esta, currentItem.name)
+      const voiceDuration = speech.estimateDurationMs(explanationVoice)
+
       let transitioned = false
       const transitionToGuessing = () => {
         if (transitioned) return
@@ -187,21 +189,40 @@ export function WhereWasIt({ onComplete, onExit }: Props) {
         speech.speak(guessingPrompt)
       }
 
-      // Voice speaks the explanation with varied phrasing
-      const explanationVoice = pickRandom(WHERE_WAS_IT_VOICES.showing)(esta, currentItem.name)
-      speech.speak(explanationVoice, transitionToGuessing)
-
-      // Fallback timer in case speech synthesis callback does not fire
-      addTimeout(transitionToGuessing, 4500)
-
-      // 3. While the locution is being spoken, hide the cards in REVERSE order
+      // 3. While the locution is being spoken, keep cards open during the first half, then hide in REVERSE order
       const reverseOrder = [...revealOrder].reverse()
+      const startHideAt = Math.max(1200, Math.floor(voiceDuration * 0.45))
+      const stepHideInterval = Math.max(260, Math.floor((voiceDuration * 0.50) / Math.max(1, reverseOrder.length)))
+      const lastHideTime = startHideAt + reverseOrder.length * stepHideInterval
+
       reverseOrder.forEach((slotIdx, i) => {
         addTimeout(() => {
           sound.playTap()
           setVisibleRevealedSlots((prev) => prev.filter((s) => s !== slotIdx))
-        }, 800 + i * 280)
+        }, startHideAt + i * stepHideInterval)
       })
+
+      let voiceDone = false
+      let hideDone = false
+
+      const checkReadyToGuess = () => {
+        if (voiceDone && hideDone) {
+          transitionToGuessing()
+        }
+      }
+
+      speech.speak(explanationVoice, () => {
+        voiceDone = true
+        checkReadyToGuess()
+      })
+
+      addTimeout(() => {
+        hideDone = true
+        checkReadyToGuess()
+      }, lastHideTime)
+
+      // Safety fallback adapted to the speech duration
+      addTimeout(transitionToGuessing, Math.max(voiceDuration, lastHideTime) + 2200)
     }, totalRevealTime)
   }
 
@@ -233,8 +254,9 @@ export function WhereWasIt({ onComplete, onExit }: Props) {
         }, 500)
       }
 
+      const praiseDuration = speech.estimateDurationMs(praise)
       speech.speak(praise, advance)
-      setTimeout(advance, 6000)
+      setTimeout(advance, praiseDuration + 2500)
     } else {
       sound.playGentleRetry()
       const retryMsg = pickRandom(WHERE_WAS_IT_VOICES.wrong)(estaba)
@@ -260,39 +282,27 @@ export function WhereWasIt({ onComplete, onExit }: Props) {
   return (
     <div className="flex-1 flex flex-col justify-between w-full max-w-2xl sm:max-w-3xl mx-auto overflow-hidden h-full">
       {/* Top bar */}
-      <div className="flex items-center justify-between bg-white rounded-2xl sm:rounded-3xl p-1.5 sm:p-4 border-2 sm:border-3 border-yellow-300 mb-1.5 sm:mb-4 shadow-xs shrink-0">
-        <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
-          <span className="font-black text-stone-900 text-sm sm:text-2xl">Ronda:</span>
-          <span className="px-2 sm:px-4 py-1 sm:py-2 bg-yellow-100 text-yellow-950 font-black rounded-xl sm:rounded-2xl text-xs sm:text-2xl whitespace-nowrap">
+      <div className="flex items-center justify-center bg-white rounded-2xl sm:rounded-3xl p-2 sm:p-3.5 border-2 sm:border-3 border-yellow-300 mb-1.5 sm:mb-3 shadow-xs shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <span className="font-black text-stone-900 text-base sm:text-2xl">Ronda:</span>
+          <span className="px-3 sm:px-4 py-1 sm:py-1.5 bg-yellow-100 text-yellow-950 font-black rounded-xl sm:rounded-2xl text-base sm:text-2xl whitespace-nowrap">
             {round + 1} de 3 ({currentConfig.flippedCount} de {currentConfig.totalCards} volteadas)
           </span>
         </div>
-
-        <SpeakerButton
-          text={
-            phase === 'intro'
-              ? `Fíjate bien. Hay ${currentConfig.totalCards} tarjetas en la mesa. Voltearemos ${currentConfig.flippedCount} para esconder ${currentItem.name}. Pulsa el botón cuando estés listo.`
-              : phase === 'guessing'
-              ? `¿Dónde ${estaba} ${currentItem.name}? Toca la tarjeta entre las ${currentConfig.totalCards} de la mesa.`
-              : `Mira dónde dejamos ${currentItem.name}.`
-          }
-          label="Escuchar"
-          className="shrink-0"
-        />
       </div>
 
       <div className="flex-1 flex flex-col justify-between bg-white border-3 sm:border-4 border-yellow-400 rounded-2xl sm:rounded-3xl p-2 sm:p-6 shadow-md text-center min-h-0 overflow-hidden">
         <div className="shrink-0">
-          <h3 className="text-lg sm:text-3xl font-black text-stone-950 mb-0.5 sm:mb-2">
+          <h3 className="text-xl sm:text-3xl font-black text-stone-950 mb-0.5 sm:mb-2">
             {titleText}
           </h3>
-          <p className="text-xs sm:text-xl font-bold text-stone-700">
+          <p className="text-sm sm:text-xl font-bold text-stone-700">
             {subtitleText}
           </p>
         </div>
 
         {feedback && (
-          <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-amber-100 border-2 border-amber-400 text-amber-950 font-black text-sm sm:text-2xl mb-1 sm:mb-3 animate-in fade-in shrink-0">
+          <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-amber-100 border-2 border-amber-400 text-amber-950 font-black text-base sm:text-2xl mb-1 sm:mb-3 animate-in fade-in shrink-0">
             {feedback}
           </div>
         )}
@@ -334,7 +344,7 @@ export function WhereWasIt({ onComplete, onExit }: Props) {
                       </span>
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center border-2 border-dashed border-stone-200 rounded-lg sm:rounded-xl">
-                        <span className="text-stone-400 font-bold text-xs sm:text-sm">
+                        <span className="text-stone-500 font-black text-sm sm:text-lg">
                           Vacía
                         </span>
                       </div>

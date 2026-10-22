@@ -222,6 +222,22 @@ class SpeechService {
     return chunks
   }
 
+  // Estimates the spoken duration (in ms) of a text including sentence pauses
+  estimateDurationMs(text: string): number {
+    const chunks = this.splitIntoChunks(text)
+    if (chunks.length === 0) return 0
+
+    let totalMs = 250 // initial synthesizer warm-up buffer
+    chunks.forEach((chunk, idx) => {
+      // At rate 0.90, Spanish speech averages ~78ms per character + 220ms utterance overhead
+      totalMs += chunk.text.length * 78 + 220
+      if (idx < chunks.length - 1) {
+        totalMs += chunk.pauseAfterMs
+      }
+    })
+    return totalMs
+  }
+
   // Speaks text with calm sentence pauses and kind, smiling vocal warmth
   speak(text: string, onEnd?: () => void, overrideVoice?: SpeechSynthesisVoice) {
     if (!this.synth) {

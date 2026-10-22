@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { sound } from '../services/sound'
 import { speech } from '../services/speech'
-import { SpeakerButton } from '../components/SpeakerButton'
 import { SuccessCelebration } from '../components/SuccessCelebration'
 import { pickRandom, SPOT_OBJECT_VOICES } from '../services/voiceFeedback'
 
@@ -138,21 +137,22 @@ export function SpotObject({ onComplete, onExit }: Props) {
     isAdvancingRef.current = false
 
     const introPhrase = pickRandom(SPOT_OBJECT_VOICES.intro)(count)
+    const introDuration = speech.estimateDurationMs(introPhrase)
 
     // Initial 250ms buffer ensuring DOM is mounted
     timerRef.current = window.setTimeout(() => {
-      // Step 1: Varied voice intro
+      // Step 1: Varied voice intro - wait for full locution before revealing cards
       speech.speak(introPhrase, () => {
-        // Step 2: "espera un momento y muestra las cartas"
+        // Step 2: brief pause after voice ends, then show cards
         timerRef.current = window.setTimeout(() => {
           revealCards(roundNum)
         }, 300)
       })
 
-      // Fallback timer if speech synthesis onEnd doesn't fire
+      // Safety fallback timer adapted to the actual duration of the intro locution
       fallbackRef.current = window.setTimeout(() => {
         revealCards(roundNum)
-      }, 3500)
+      }, introDuration + 2200)
     }, 250)
   }
 
@@ -190,8 +190,9 @@ export function SpotObject({ onComplete, onExit }: Props) {
         }, 500)
       }
 
+      const praiseDuration = speech.estimateDurationMs(praise)
       speech.speak(praise, advance)
-      setTimeout(advance, 6000)
+      setTimeout(advance, praiseDuration + 2500)
     } else {
       sound.playGentleRetry()
       const retryPhrase = pickRandom(SPOT_OBJECT_VOICES.wrong)
@@ -218,31 +219,21 @@ export function SpotObject({ onComplete, onExit }: Props) {
   return (
     <div className="flex-1 flex flex-col justify-between w-full max-w-2xl mx-auto overflow-hidden h-full">
       {/* Top bar */}
-      <div className="flex items-center justify-between bg-white rounded-2xl sm:rounded-3xl p-1.5 sm:p-4 border-2 sm:border-3 border-sky-300 mb-1.5 sm:mb-4 shadow-xs shrink-0">
-        <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
-          <span className="font-black text-stone-900 text-sm sm:text-2xl">Ronda:</span>
-          <span className="px-2 sm:px-4 py-1 sm:py-2 bg-sky-100 text-sky-950 font-black rounded-xl sm:rounded-2xl text-xs sm:text-2xl whitespace-nowrap">
+      <div className="flex items-center justify-center bg-white rounded-2xl sm:rounded-3xl p-2 sm:p-3.5 border-2 sm:border-3 border-sky-300 mb-1.5 sm:mb-3 shadow-xs shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <span className="font-black text-stone-900 text-base sm:text-2xl">Ronda:</span>
+          <span className="px-3 sm:px-4 py-1 sm:py-1.5 bg-sky-100 text-sky-950 font-black rounded-xl sm:rounded-2xl text-base sm:text-2xl whitespace-nowrap">
             {round + 1} de {sessionPairs.length} ({cardCount} tarjetas)
           </span>
         </div>
-
-        <SpeakerButton
-          text={
-            phase === 'guessing'
-              ? '¿Dónde estaba el objeto diferente? Toca la tarjeta.'
-              : 'Fíjate bien y busca el objeto diferente.'
-          }
-          label="Escuchar"
-          className="shrink-0"
-        />
       </div>
 
       <div className="flex-1 flex flex-col justify-between bg-white border-3 sm:border-4 border-sky-400 rounded-2xl sm:rounded-3xl p-2 sm:p-6 shadow-md text-center min-h-0 overflow-hidden">
         <div className="shrink-0">
-          <h3 className="text-lg sm:text-3xl font-black text-sky-950 mb-0.5 sm:mb-2">
+          <h3 className="text-xl sm:text-3xl font-black text-sky-950 mb-0.5 sm:mb-2">
             {promptText}
           </h3>
-          <p className="text-xs sm:text-xl font-bold text-stone-700">
+          <p className="text-sm sm:text-xl font-bold text-stone-700">
             {phase === 'ready'
               ? 'Escucha atentamente. Las cartas se mostrarán en un momento...'
               : phase === 'showing'
@@ -252,7 +243,7 @@ export function SpotObject({ onComplete, onExit }: Props) {
         </div>
 
         {feedback && (
-          <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-sky-100 border-2 border-sky-300 text-sky-950 font-black text-sm sm:text-2xl mb-1 sm:mb-3 animate-in fade-in shrink-0">
+          <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-sky-100 border-2 border-sky-300 text-sky-950 font-black text-base sm:text-2xl mb-1 sm:mb-3 animate-in fade-in shrink-0">
             {feedback}
           </div>
         )}
@@ -261,8 +252,8 @@ export function SpotObject({ onComplete, onExit }: Props) {
         <div
           className={`grid ${
             cardCount === 12
-              ? 'grid-cols-4 max-w-xl gap-1.5 sm:gap-3.5'
-              : 'grid-cols-3 max-w-lg gap-2 sm:gap-4'
+              ? 'grid-cols-4 max-w-xl gap-2 sm:gap-3.5'
+              : 'grid-cols-3 max-w-lg gap-2.5 sm:gap-4'
           } w-full mx-auto flex-1 min-h-0 my-auto items-center`}
         >
           {Array.from({ length: cardCount }).map((_, idx) => {
@@ -278,8 +269,8 @@ export function SpotObject({ onComplete, onExit }: Props) {
                 onClick={() => handleCardClick(idx)}
                 className={`w-full h-full ${
                   cardCount === 12
-                    ? 'max-h-[105px] sm:max-h-[155px] min-h-[50px] sm:min-h-[68px] p-1 sm:p-2'
-                    : 'max-h-[120px] sm:max-h-[180px] min-h-[60px] sm:min-h-[80px] p-2'
+                    ? 'max-h-[125px] sm:max-h-[175px] min-h-[60px] sm:min-h-[80px] p-1.5 sm:p-2.5'
+                    : 'max-h-[145px] sm:max-h-[200px] min-h-[72px] sm:min-h-[95px] p-2 sm:p-3'
                 } rounded-2xl sm:rounded-3xl border-3 sm:border-4 flex items-center justify-center transition-all cursor-pointer select-none ${
                   isShowingFace
                     ? isTarget && phase === 'guessing'
@@ -292,7 +283,7 @@ export function SpotObject({ onComplete, onExit }: Props) {
                 {isShowingFace ? (
                   <span
                     className={`${
-                      cardCount === 12 ? 'text-3xl sm:text-6xl' : 'text-4xl sm:text-7xl'
+                      cardCount === 12 ? 'text-5xl sm:text-7xl' : 'text-6xl sm:text-8xl'
                     } animate-in zoom-in-75 duration-150`}
                   >
                     {icon}
@@ -300,7 +291,7 @@ export function SpotObject({ onComplete, onExit }: Props) {
                 ) : (
                   <span
                     className={`text-white font-black ${
-                      cardCount === 12 ? 'text-3xl sm:text-5xl' : 'text-4xl sm:text-6xl'
+                      cardCount === 12 ? 'text-4xl sm:text-6xl' : 'text-5xl sm:text-7xl'
                     }`}
                   >
                     ?
