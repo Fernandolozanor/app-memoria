@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Volume2, Check, X } from 'lucide-react'
-import { speech } from '../services/speech'
+import { speech, type VoiceProfile } from '../services/speech'
 
 interface Props {
   isOpen: boolean
@@ -8,17 +8,17 @@ interface Props {
 }
 
 export function VoiceModal({ isOpen, onClose }: Props) {
-  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([])
-  const [selectedVoiceName, setSelectedVoiceName] = useState<string>('')
-  const [testingVoiceName, setTestingVoiceName] = useState<string | null>(null)
+  const [profiles, setProfiles] = useState<VoiceProfile[]>([])
+  const [selectedProfileId, setSelectedProfileId] = useState<string>('')
+  const [testingProfileId, setTestingProfileId] = useState<string | null>(null)
 
   useEffect(() => {
     const updateVoices = () => {
-      const avail = speech.getAvailableVoices()
-      setVoices(avail)
-      const current = speech.getCurrentVoice()
+      const avail = speech.getAvailableVoiceProfiles()
+      setProfiles(avail)
+      const current = speech.getCurrentProfile()
       if (current) {
-        setSelectedVoiceName(current.name)
+        setSelectedProfileId(current.id)
       }
     }
 
@@ -29,31 +29,19 @@ export function VoiceModal({ isOpen, onClose }: Props) {
 
   if (!isOpen) return null
 
-  const getFriendlyVoiceLabel = (v: SpeechSynthesisVoice) => {
-    const n = v.name.toLowerCase()
-    if (n.includes('laura')) return { title: 'Laura', tag: 'Cálida, dulce y natural' }
-    if (n.includes('elvira')) return { title: 'Elvira', tag: 'Muy suave y afectuosa' }
-    if (n.includes('helena')) return { title: 'Helena', tag: 'Clara y tradicional' }
-    if (n.includes('google')) return { title: 'Google Español', tag: 'Voz fluida' }
-    if (n.includes('mónica') || n.includes('monica')) return { title: 'Mónica', tag: 'Amable y agradable' }
-    if (n.includes('paloma')) return { title: 'Paloma', tag: 'Voz suave' }
-    if (n.includes('pablo')) return { title: 'Pablo', tag: 'Voz masculina' }
-    return { title: v.name.replace(/Microsoft |Google /g, ''), tag: 'Voz en español' }
+  const handleSelect = (p: VoiceProfile) => {
+    speech.setProfileById(p.id)
+    setSelectedProfileId(p.id)
   }
 
-  const handleSelect = (v: SpeechSynthesisVoice) => {
-    speech.setVoiceByName(v.name)
-    setSelectedVoiceName(v.name)
-  }
-
-  const handleTestVoice = (v: SpeechSynthesisVoice) => {
-    setTestingVoiceName(v.name)
+  const handleTestVoice = (p: VoiceProfile) => {
+    setTestingProfileId(p.id)
     speech.speak(
       'Hola. Con esta voz leeré las instrucciones y te acompañaré en cada juego. ¿Te gusta cómo suena?',
       () => {
-        setTestingVoiceName(null)
+        setTestingProfileId(null)
       },
-      v
+      p
     )
   }
 
@@ -65,7 +53,7 @@ export function VoiceModal({ isOpen, onClose }: Props) {
           <div className="flex items-center gap-2">
             <span className="text-2xl">🌸</span>
             <div>
-              <h2 className="text-lg sm:text-2xl font-black text-stone-950">Voz de la narradora</h2>
+              <h2 className="text-lg sm:text-2xl font-black text-stone-950">Elegir voz</h2>
               <p className="text-xs sm:text-base font-bold text-stone-600">
                 Elige la voz que te resulte más agradable y clara:
               </p>
@@ -86,20 +74,19 @@ export function VoiceModal({ isOpen, onClose }: Props) {
 
         {/* Voices List */}
         <div className="flex-1 overflow-y-auto py-3 space-y-2.5 min-h-0">
-          {voices.length === 0 ? (
+          {profiles.length === 0 ? (
             <div className="p-4 text-center text-stone-600 font-bold">
               Cargando las voces de tu dispositivo...
             </div>
           ) : (
-            voices.map((v) => {
-              const info = getFriendlyVoiceLabel(v)
-              const isSelected = v.name === selectedVoiceName
-              const isTesting = v.name === testingVoiceName
+            profiles.map((p) => {
+              const isSelected = p.id === selectedProfileId
+              const isTesting = p.id === testingProfileId
 
               return (
                 <div
-                  key={v.name}
-                  onClick={() => handleSelect(v)}
+                  key={p.id}
+                  onClick={() => handleSelect(p)}
                   className={`p-3 sm:p-4 rounded-2xl border-3 transition-all cursor-pointer flex items-center justify-between gap-2 ${
                     isSelected
                       ? 'bg-emerald-50 border-emerald-500 shadow-sm ring-2 ring-emerald-300'
@@ -109,7 +96,7 @@ export function VoiceModal({ isOpen, onClose }: Props) {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <span className="font-black text-base sm:text-xl text-stone-950">
-                        {info.title}
+                        {p.title}
                       </span>
                       {isSelected && (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[11px] sm:text-xs font-bold shrink-0">
@@ -118,14 +105,14 @@ export function VoiceModal({ isOpen, onClose }: Props) {
                       )}
                     </div>
                     <p className="text-xs sm:text-sm font-bold text-stone-600 mt-0.5">
-                      {info.tag}
+                      {p.tag}
                     </p>
                   </div>
 
                   <button
                     onClick={(e) => {
                       e.stopPropagation()
-                      handleTestVoice(v)
+                      handleTestVoice(p)
                     }}
                     className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl font-black text-xs sm:text-sm transition-all cursor-pointer shrink-0 border-2 ${
                       isTesting

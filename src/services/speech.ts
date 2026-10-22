@@ -6,9 +6,42 @@ export interface SpeechChunk {
   pauseAfterMs: number
 }
 
+export interface VoiceProfile {
+  id: string
+  title: string
+  tag: string
+  gender: 'F' | 'M'
+  voice: SpeechSynthesisVoice
+  pitch: number
+  rate: number
+}
+
+const NOVELTY_VOICES = [
+  'flo',
+  'grandpa',
+  'grandma',
+  'rocko',
+  'sandy',
+  'shelley',
+  'Albert',
+  'bahh',
+  'bells',
+  'boing',
+  'bubbles',
+  'cellos',
+  'jester',
+  'organ',
+  'superstar',
+  'trinoids',
+  'whisper',
+  'wobble',
+  'zarvox',
+]
+
 class SpeechService {
   private synth: SpeechSynthesis | null = null
-  private voice: SpeechSynthesisVoice | null = null
+  private profiles: VoiceProfile[] = []
+  private currentProfile: VoiceProfile | null = null
   private currentUtterance: SpeechSynthesisUtterance | null = null
   private queueTimeoutId: number | null = null
   private generationId = 0
@@ -39,114 +72,298 @@ class SpeechService {
     this.listeners.forEach((cb) => cb())
   }
 
+  private getVoiceQualityScore(v: SpeechSynthesisVoice): number {
+    const n = `${v.name} ${v.voiceURI}`.toLowerCase()
+    let score = 0
+    if (n.includes('natural') || n.includes('neural') || n.includes('online')) score += 20
+    if (n.includes('enhanced') || n.includes('premium') || n.includes('mejorada')) score += 15
+    if (v.lang.toLowerCase().includes('es-es') || v.lang.toLowerCase().includes('es_es')) score += 8
+    if (v.localService) score += 2
+    if (v.default) score += 1
+    return score
+  }
+
+  private classifyVoice(v: SpeechSynthesisVoice): {
+    key: string
+    title: string
+    tag: string
+    gender: 'F' | 'M'
+  } | null {
+    const n = v.name.toLowerCase()
+
+    if (NOVELTY_VOICES.some((nov) => n.includes(nov.toLowerCase()))) {
+      return null
+    }
+
+    // Female voices
+    if (n.includes('laura')) {
+      return { key: 'laura', title: 'Laura', tag: 'Cálida, dulce y natural', gender: 'F' }
+    }
+    if (n.includes('elvira')) {
+      return { key: 'elvira', title: 'Elvira', tag: 'Muy suave y afectuosa', gender: 'F' }
+    }
+    if (n.includes('mónica') || n.includes('monica')) {
+      return { key: 'monica', title: 'Mónica', tag: 'Amable y agradable', gender: 'F' }
+    }
+    if (n.includes('paulina')) {
+      return { key: 'paulina', title: 'Paulina', tag: 'Dulce y cercana', gender: 'F' }
+    }
+    if (n.includes('paloma')) {
+      return { key: 'paloma', title: 'Paloma', tag: 'Voz suave y clara', gender: 'F' }
+    }
+    if (n.includes('helena')) {
+      return { key: 'helena', title: 'Helena', tag: 'Clara y tradicional', gender: 'F' }
+    }
+    if (n.includes('sabina')) {
+      return { key: 'sabina', title: 'Sabina', tag: 'Suave y pausada', gender: 'F' }
+    }
+    if (n.includes('dalia')) {
+      return { key: 'dalia', title: 'Dalia', tag: 'Cálida y amable', gender: 'F' }
+    }
+    if (n.includes('sofia') || n.includes('sofía')) {
+      return { key: 'sofia', title: 'Sofía', tag: 'Amable y clara', gender: 'F' }
+    }
+    if (n.includes('lucia') || n.includes('lucía')) {
+      return { key: 'lucia', title: 'Lucía', tag: 'Dulce y agradable', gender: 'F' }
+    }
+    if (n.includes('carmen')) {
+      return { key: 'carmen', title: 'Carmen', tag: 'Cercana y clara', gender: 'F' }
+    }
+    if (n.includes('marisol')) {
+      return { key: 'marisol', title: 'Marisol', tag: 'Suave y expresiva', gender: 'F' }
+    }
+    if (n.includes('google')) {
+      return { key: 'google', title: 'Elena', tag: 'Voz fluida y amable', gender: 'F' }
+    }
+
+    // Male voices
+    if (n.includes('alvaro') || n.includes('álvaro')) {
+      return {
+        key: 'alvaro',
+        title: 'Álvaro',
+        tag: 'Voz de hombre suave, amable y agradable',
+        gender: 'M',
+      }
+    }
+    if (n.includes('jorge')) {
+      return {
+        key: 'jorge',
+        title: 'Jorge',
+        tag: 'Voz de hombre suave, amable y agradable',
+        gender: 'M',
+      }
+    }
+    if (n.includes('pablo')) {
+      return {
+        key: 'pablo',
+        title: 'Pablo',
+        tag: 'Voz de hombre suave, amable y agradable',
+        gender: 'M',
+      }
+    }
+    if (n.includes('juan')) {
+      return {
+        key: 'juan',
+        title: 'Juan',
+        tag: 'Voz de hombre suave, amable y agradable',
+        gender: 'M',
+      }
+    }
+    if (n.includes('diego')) {
+      return {
+        key: 'diego',
+        title: 'Diego',
+        tag: 'Voz de hombre suave, amable y agradable',
+        gender: 'M',
+      }
+    }
+    if (n.includes('carlos')) {
+      return {
+        key: 'carlos',
+        title: 'Carlos',
+        tag: 'Voz de hombre suave, amable y agradable',
+        gender: 'M',
+      }
+    }
+    if (n.includes('alonso')) {
+      return {
+        key: 'alonso',
+        title: 'Alonso',
+        tag: 'Voz de hombre suave, amable y agradable',
+        gender: 'M',
+      }
+    }
+    if (n.includes('enrique')) {
+      return {
+        key: 'enrique',
+        title: 'Enrique',
+        tag: 'Voz de hombre suave, amable y agradable',
+        gender: 'M',
+      }
+    }
+    if (n.includes('raul') || n.includes('raúl')) {
+      return {
+        key: 'raul',
+        title: 'Raúl',
+        tag: 'Voz de hombre suave, amable y agradable',
+        gender: 'M',
+      }
+    }
+    if (n.includes('reed') || n.includes('eddy')) {
+      return {
+        key: 'carlos',
+        title: 'Carlos',
+        tag: 'Voz de hombre suave, amable y agradable',
+        gender: 'M',
+      }
+    }
+
+    // Generic fallback cleaned up so duplicates with suffixes collapse into one key
+    const cleanTitle = v.name
+      .replace(/Microsoft |Google |Apple /gi, '')
+      .replace(/Online \(Natural\)/gi, '')
+      .replace(/\(.*?\)/g, '')
+      .replace(/-.*$/g, '')
+      .trim()
+
+    const key = cleanTitle.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    if (!key) return null
+
+    return {
+      key,
+      title: cleanTitle,
+      tag: 'Amable y clara',
+      gender: 'F',
+    }
+  }
+
+  private buildProfiles(spanishVoices: SpeechSynthesisVoice[]): VoiceProfile[] {
+    // Deduplicate by key, keeping only the highest quality SpeechSynthesisVoice for each name
+    const bestByKey = new Map<
+      string,
+      {
+        meta: { key: string; title: string; tag: string; gender: 'F' | 'M' }
+        voice: SpeechSynthesisVoice
+        score: number
+      }
+    >()
+
+    for (const v of spanishVoices) {
+      const meta = this.classifyVoice(v)
+      if (!meta) continue
+
+      const score = this.getVoiceQualityScore(v)
+      const existing = bestByKey.get(meta.key)
+      if (!existing || score > existing.score) {
+        bestByKey.set(meta.key, { meta, voice: v, score })
+      }
+    }
+
+    const result: VoiceProfile[] = []
+    for (const { meta, voice } of bestByKey.values()) {
+      result.push({
+        id: meta.key,
+        title: meta.title,
+        tag: meta.tag,
+        gender: meta.gender,
+        voice,
+        pitch: meta.gender === 'M' ? 0.96 : 1.05,
+        rate: meta.gender === 'M' ? 0.89 : 0.90,
+      })
+    }
+
+    // Sort: Female voices first (prioritizing Mónica, Laura, Elvira, Paulina), then Male voices
+    const femaleOrder = ['laura', 'elvira', 'monica', 'paulina', 'paloma', 'helena', 'google']
+    result.sort((a, b) => {
+      if (a.gender !== b.gender) return a.gender === 'F' ? -1 : 1
+      const idxA = femaleOrder.indexOf(a.id)
+      const idxB = femaleOrder.indexOf(b.id)
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB
+      if (idxA !== -1) return -1
+      if (idxB !== -1) return 1
+      return a.title.localeCompare(b.title, 'es')
+    })
+
+    // Ensure there is ALWAYS at least one gentle, warm, pleasant male voice option
+    const hasMale = result.some((p) => p.gender === 'M')
+    if (!hasMale && result.length > 0) {
+      const baseVoice = result[0].voice
+      result.push({
+        id: 'carlos-male',
+        title: 'Carlos',
+        tag: 'Voz de hombre suave, amable y agradable',
+        gender: 'M',
+        voice: baseVoice,
+        pitch: 0.68, // Warm, natural male baritone pitch
+        rate: 0.88, // Calm, gentle, unhurried pace
+      })
+    }
+
+    return result
+  }
+
   private initVoices() {
     if (!this.synth) return
     const voices = this.synth.getVoices()
     if (!voices || voices.length === 0) return
 
-    const storedVoiceName =
+    const spanishVoices = voices.filter((v) => v.lang.toLowerCase().startsWith('es'))
+    const pool = spanishVoices.length > 0 ? spanishVoices : voices
+
+    this.profiles = this.buildProfiles(pool)
+    if (this.profiles.length === 0) return
+
+    const storedProfileId =
+      typeof localStorage !== 'undefined' ? localStorage.getItem('app_memoria_voice_profile') : null
+    const legacyVoiceName =
       typeof localStorage !== 'undefined' ? localStorage.getItem('app_memoria_voice') : null
 
-    const spanishVoices = voices.filter((v) => v.lang.startsWith('es'))
-
-    // 1. If user previously chose a specific voice, respect it
-    if (storedVoiceName) {
-      const saved = spanishVoices.find((v) => v.name === storedVoiceName)
+    // 1. Respect user's saved profile ID
+    if (storedProfileId) {
+      const saved = this.profiles.find((p) => p.id === storedProfileId)
       if (saved) {
-        this.voice = saved
+        this.currentProfile = saved
         this.notify()
         return
       }
     }
 
-    // Prioritized female voice names from sweetest, warmest, and most conversational
-    const prioritizedFemaleNames = [
-      'laura', // Microsoft Laura (Windows OneCore - warm, pleasant, friendly, soft)
-      'elvira', // Microsoft Elvira Online (Natural - gentle neural)
-      'google', // Google español (Chrome - smooth female)
-      'paloma', // Spanish female
-      'mónica',
-      'monica',
-      'sofia',
-      'sofía',
-      'lucia',
-      'lucía',
-      'paulina',
-      'carmen',
-      'dalia',
-      'abril',
-      'jimena',
-      'marisol',
-      'helena', // Microsoft Helena (Legacy desktop)
-    ]
-    const maleNames = [
-      'alvaro',
-      'álvaro',
-      'pablo',
-      'jorge',
-      'alonso',
-      'enrique',
-      'raul',
-      'raúl',
-      'manuel',
-      'david',
-      'carlos',
-      'male',
-    ]
-
-    // 2. Natural / Online neural Spanish female voice
-    const naturalFemale = spanishVoices.find((v) => {
-      const n = v.name.toLowerCase()
-      const isNatural = n.includes('natural') || n.includes('online') || n.includes('neural')
-      const isFemale = prioritizedFemaleNames.some((fn) => n.includes(fn)) || !maleNames.some((mn) => n.includes(mn))
-      return isNatural && isFemale
-    })
-
-    // 3. Search female voices in order of priority
-    let bestFemaleVoice: SpeechSynthesisVoice | undefined
-    for (const nameKey of prioritizedFemaleNames) {
-      const match = spanishVoices.find((v) => v.name.toLowerCase().includes(nameKey))
-      if (match) {
-        bestFemaleVoice = match
-        break
+    // 2. Migrate legacy voice name if present
+    if (legacyVoiceName) {
+      const savedLegacy = this.profiles.find((p) => p.voice.name === legacyVoiceName)
+      if (savedLegacy) {
+        this.currentProfile = savedLegacy
+        this.notify()
+        return
       }
     }
 
-    // 4. Any Spanish voice that is not explicitly male
-    const anyNonMaleSpanish = spanishVoices.find(
-      (v) => !maleNames.some((mn) => v.name.toLowerCase().includes(mn))
-    )
-
-    const selectedVoice =
-      naturalFemale || bestFemaleVoice || anyNonMaleSpanish || spanishVoices[0] || voices[0]
-
-    if (selectedVoice) {
-      this.voice = selectedVoice
-      this.notify()
-    }
+    // 3. Default to the first (best) profile
+    this.currentProfile = this.profiles[0]
+    this.notify()
   }
 
   isSupported(): boolean {
     return typeof window !== 'undefined' && 'speechSynthesis' in window
   }
 
-  getAvailableVoices(): SpeechSynthesisVoice[] {
-    if (!this.synth) return []
-    const voices = this.synth.getVoices() || []
-    return voices.filter((v) => v.lang.startsWith('es'))
+  getAvailableVoiceProfiles(): VoiceProfile[] {
+    if (this.profiles.length === 0 && this.synth) {
+      this.initVoices()
+    }
+    return this.profiles
   }
 
-  getCurrentVoice(): SpeechSynthesisVoice | null {
-    return this.voice
+  getCurrentProfile(): VoiceProfile | null {
+    return this.currentProfile
   }
 
-  setVoiceByName(name: string) {
-    const voices = this.getAvailableVoices()
-    const match = voices.find((v) => v.name === name)
+  setProfileById(id: string) {
+    const match = this.profiles.find((p) => p.id === id)
     if (match) {
-      this.voice = match
+      this.currentProfile = match
       if (typeof localStorage !== 'undefined') {
-        localStorage.setItem('app_memoria_voice', name)
+        localStorage.setItem('app_memoria_voice_profile', id)
       }
       this.notify()
     }
@@ -239,7 +456,7 @@ class SpeechService {
   }
 
   // Speaks text with calm sentence pauses and kind, smiling vocal warmth
-  speak(text: string, onEnd?: () => void, overrideVoice?: SpeechSynthesisVoice) {
+  speak(text: string, onEnd?: () => void, overrideProfile?: VoiceProfile) {
     if (!this.synth) {
       if (onEnd) onEnd()
       return
@@ -254,6 +471,7 @@ class SpeechService {
     const now = Date.now()
     // Anti-debounce if already speaking exact text in the last 400ms
     if (
+      !overrideProfile &&
       this.lastSpokenText === cleanedRaw &&
       now - this.lastSpokenTime < 400 &&
       (this.synth.speaking || this.synth.pending)
@@ -273,11 +491,14 @@ class SpeechService {
     }
 
     const currentGen = this.generationId
-    if (!this.voice && !overrideVoice) {
+    if (!this.currentProfile && !overrideProfile) {
       this.initVoices()
     }
 
-    const activeVoice = overrideVoice || this.voice
+    const activeProfile = overrideProfile || this.currentProfile
+    const activeVoice = activeProfile ? activeProfile.voice : null
+    const activeRate = activeProfile ? activeProfile.rate : 0.90
+    const activePitch = activeProfile ? activeProfile.pitch : 1.05
     let chunkIndex = 0
 
     const speakNextChunk = () => {
@@ -304,11 +525,9 @@ class SpeechService {
       }
       utterance.lang = activeVoice ? activeVoice.lang : 'es-ES'
 
-      // Warm, affectionate, friendly prosody:
-      // Slightly elevated pitch (1.05) creates a kind, smiling, reassuring tone
-      // Rate 0.90 ensures calm, clear, stress-free comprehension
-      utterance.rate = 0.90
-      utterance.pitch = 1.05
+      // Warm, affectionate, friendly prosody adapted to the chosen profile (female or male)
+      utterance.rate = activeRate
+      utterance.pitch = activePitch
       utterance.volume = 0.90
 
       this.currentUtterance = utterance
