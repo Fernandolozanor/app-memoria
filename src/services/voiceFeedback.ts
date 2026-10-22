@@ -83,17 +83,17 @@ export const SPOT_OBJECT_VOICES = {
 // -------------------------------------------------------------
 export const WHERE_WAS_IT_VOICES = {
   intro: [
-    (total: number, flipped: number, name: string) =>
-      `Fíjate bien. Hay ${total} tarjetas en la mesa. Voltearemos ${flipped} y en una esconderemos ${name}. Pulsa cuando estés listo.`,
-    (total: number, flipped: number, name: string) =>
-      `Vamos a jugar con ${total} tarjetas. Voltearemos ${flipped} para ocultar ${name}. Toca el botón cuando quieras empezar.`,
-    (total: number, flipped: number, name: string) =>
-      `Atención a la mesa: de las ${total} tarjetas, descubriremos ${flipped} y guardaremos ${name}. Pulsa cuando quieras.`,
+    (total: number, flipped: number) =>
+      `Fíjate bien. Hay ${total} tarjetas en la mesa. Voltearemos ${flipped} con distintos objetos. Pulsa cuando estés listo.`,
+    (total: number, flipped: number) =>
+      `Vamos a jugar con ${total} tarjetas. Descubriremos ${flipped} objetos diferentes. Toca el botón cuando quieras empezar.`,
+    (total: number, flipped: number) =>
+      `Atención a la mesa: de las ${total} tarjetas, voltearemos ${flipped} con objetos. Pulsa cuando quieras.`,
   ],
   showing: [
-    (esta: string, name: string) => `Aquí ${esta} ${name}. Recuerda bien su posición.`,
-    (esta: string, name: string) => `Fíjate en esta casilla: aquí ${esta} ${name}. Grábate el lugar.`,
-    (esta: string, name: string) => `¡Atento! Aquí dejamos ${name}. Memoriza dónde ${esta}.`,
+    (flipped: number) => `Fíjate bien en estos ${flipped} objetos y recuerda dónde está cada uno.`,
+    (flipped: number) => `Mira con atención los ${flipped} objetos y grábate su posición en la mesa.`,
+    (flipped: number) => `¡Atento! Memoriza qué objeto hay en cada una de las ${flipped} casillas.`,
   ],
   guessing: [
     (estaba: string, name: string) => `¿Dónde ${estaba} ${name}? Toca la tarjeta.`,
