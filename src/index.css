@@ -37,3 +37,25 @@ button:focus-visible {
 .animate-soft-pulse {
   animation: soft-pulse 2s infinite ease-in-out;
 }
+
+/* Attention-grabbing breathing pulse animation for green start/action buttons */
+@keyframes start-button-breathe {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 4px 14px 0 rgba(5, 150, 105, 0.35);
+  }
+  50% {
+    transform: scale(1.055);
+    box-shadow: 0 8px 24px 2px rgba(16, 185, 129, 0.65);
+  }
+}
+
+.animate-start-pulse {
+  animation: start-button-breathe 1.6s infinite ease-in-out;
+  transform-origin: center center;
+}
+
+.animate-start-pulse:active {
+  animation: none !important;
+  transform: scale(0.96) !important;
+}

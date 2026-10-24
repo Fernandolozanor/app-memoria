@@ -10,6 +10,16 @@ import {
   ListOrdered,
   Users,
   Coins,
+  CupSoda,
+  Clock,
+  Mic,
+  Briefcase,
+  Phone,
+  Sun,
+  Dices,
+  Compass,
+  Puzzle,
+  Armchair,
 } from 'lucide-react'
 import type { ActivityMeta } from '../types'
 import { sound } from '../services/sound'
@@ -30,6 +40,16 @@ const ICON_MAP: Record<string, React.ElementType> = {
   ListOrdered,
   Users,
   Coins,
+  CupSoda,
+  Clock,
+  Mic,
+  Briefcase,
+  Phone,
+  Sun,
+  Dices,
+  Compass,
+  Puzzle,
+  Armchair,
 }
 
 export function ActivityCard({ activity, onSelect }: Props) {

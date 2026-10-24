@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Auxiliary reference materials
+ARCHIVOS_AUXILIARES/

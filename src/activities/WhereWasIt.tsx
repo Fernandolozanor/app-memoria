@@ -395,7 +395,7 @@ export function WhereWasIt({ onComplete, onExit }: Props) {
           {phase === 'intro' && (
             <button
               onClick={handleShowCards}
-              className="w-full py-3 sm:py-5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl sm:rounded-3xl font-black text-base sm:text-2xl shadow-md border-2 sm:border-3 border-emerald-700 transition-all active:scale-95 cursor-pointer min-h-[48px] sm:min-h-[72px]"
+              className="w-full py-3 sm:py-5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl sm:rounded-3xl font-black text-base sm:text-2xl shadow-md border-2 sm:border-3 border-emerald-700 transition-all active:scale-95 cursor-pointer min-h-[48px] sm:min-h-[72px] animate-start-pulse"
             >
               ¡Estoy listo! Ver los objetos →
             </button>

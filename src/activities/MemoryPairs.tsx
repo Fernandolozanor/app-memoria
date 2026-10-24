@@ -255,6 +255,7 @@ export function MemoryPairs({ onComplete, onExit }: Props) {
           message="Has encontrado todas las parejas con gran memoria."
           onRestart={() => setupGame(level)}
           onHome={onExit}
+          mistakeTolerance={3}
         />
       )}
     </div>

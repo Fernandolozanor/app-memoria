@@ -1,8 +1,11 @@
+import { addMistake } from './sessionStats'
+
 // Sound effects engine using Web Audio API
 // Generates gentle, warm, harmonic tones suitable for seniors (no harsh buzzers or shrill beeps)
 
 class SoundService {
   private ctx: AudioContext | null = null
+  private activeMelodyNodes: OscillatorNode[] = []
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -188,8 +191,121 @@ class SoundService {
     osc.stop(ctx.currentTime + duration + 0.05)
   }
 
+  // Real telephone DTMF (Dual-Tone Multi-Frequency) keypad sound for digits 0-9
+  playPhoneDtmf(digit: number, duration = 0.18) {
+    const ctx = this.getContext()
+    if (!ctx) return
+
+    // Official ITU-T DTMF frequency pairs [lowHz, highHz]
+    const dtmfPairs: Record<number, [number, number]> = {
+      1: [697, 1209],
+      2: [697, 1336],
+      3: [697, 1477],
+      4: [770, 1209],
+      5: [770, 1336],
+      6: [770, 1477],
+      7: [852, 1209],
+      8: [852, 1336],
+      9: [852, 1477],
+      0: [941, 1336],
+    }
+
+    const [lowFreq, highFreq] = dtmfPairs[digit] || [697, 1209]
+    const now = ctx.currentTime
+
+    const oscLow = ctx.createOscillator()
+    const oscHigh = ctx.createOscillator()
+    const masterGain = ctx.createGain()
+
+    oscLow.type = 'sine'
+    oscHigh.type = 'sine'
+    oscLow.frequency.setValueAtTime(lowFreq, now)
+    oscHigh.frequency.setValueAtTime(highFreq, now)
+
+    masterGain.gain.setValueAtTime(0.001, now)
+    masterGain.gain.linearRampToValueAtTime(0.22, now + 0.01)
+    masterGain.gain.setValueAtTime(0.22, now + duration - 0.02)
+    masterGain.gain.exponentialRampToValueAtTime(0.001, now + duration)
+
+    oscLow.connect(masterGain)
+    oscHigh.connect(masterGain)
+    masterGain.connect(ctx.destination)
+
+    oscLow.start(now)
+    oscHigh.start(now)
+    oscLow.stop(now + duration + 0.02)
+    oscHigh.stop(now + duration + 0.02)
+  }
+
+  stopMelody() {
+    this.activeMelodyNodes.forEach((osc) => {
+      try {
+        osc.stop()
+        osc.disconnect()
+      } catch {
+        // already stopped
+      }
+    })
+    this.activeMelodyNodes = []
+  }
+
+  // Plays a scheduled sequence of notes (freq in Hz, dur in seconds) with warm accordion/piano timbre
+  // Returns total duration in milliseconds
+  playMelody(notes: { freq: number; dur: number; gap?: number }[]): number {
+    const ctx = this.getContext()
+    if (!ctx || notes.length === 0) return 0
+
+    this.stopMelody()
+
+    const now = ctx.currentTime + 0.04
+    let cursor = 0
+
+    notes.forEach((n) => {
+      const start = now + cursor
+      const gapSec = n.gap ?? 0.04 // distinct articulation gap between notes
+      const soundDur = Math.max(0.08, n.dur - gapSec)
+
+      if (n.freq > 0) {
+        const osc1 = ctx.createOscillator()
+        const osc2 = ctx.createOscillator()
+        const gain = ctx.createGain()
+        const gain2 = ctx.createGain()
+
+        osc1.type = 'triangle'
+        osc1.frequency.setValueAtTime(n.freq, start)
+
+        osc2.type = 'sine'
+        osc2.frequency.setValueAtTime(n.freq * 2, start)
+        gain2.gain.setValueAtTime(0.08, start)
+
+        gain.gain.setValueAtTime(0.001, start)
+        gain.gain.linearRampToValueAtTime(0.32, start + 0.018)
+        gain.gain.setValueAtTime(0.28, start + soundDur * 0.65)
+        gain.gain.exponentialRampToValueAtTime(0.001, start + soundDur)
+
+        osc1.connect(gain)
+        osc2.connect(gain2)
+        gain2.connect(gain)
+        gain.connect(ctx.destination)
+
+        osc1.start(start)
+        osc2.start(start)
+        osc1.stop(start + soundDur + 0.01)
+        osc2.stop(start + soundDur + 0.01)
+
+        this.activeMelodyNodes.push(osc1, osc2)
+      }
+
+      cursor += n.dur
+    })
+
+    return Math.round(cursor * 1000)
+  }
+
   // Playful, funny mini-jingle when making a mistake (approx 0.65s: comical cartoon 'oops' slide, never punishing)
   playGentleRetry() {
+    // Every gentle retry sound corresponds to a player mistake: track it for the final celebration
+    addMistake()
     const ctx = this.getContext()
     if (!ctx) return
 

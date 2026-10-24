@@ -319,7 +319,7 @@ export function ShoppingList({ onComplete, onExit }: Props) {
 
           <button
             onClick={handleFinishMemorizing}
-            className="w-full py-3.5 sm:py-5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl sm:rounded-3xl font-black text-lg sm:text-3xl shadow-md border-2 sm:border-3 border-emerald-700 transition-all active:scale-95 cursor-pointer min-h-[54px] sm:min-h-[72px] shrink-0"
+            className="w-full py-3.5 sm:py-5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl sm:rounded-3xl font-black text-lg sm:text-3xl shadow-md border-2 sm:border-3 border-emerald-700 transition-all active:scale-95 cursor-pointer min-h-[54px] sm:min-h-[72px] shrink-0 animate-start-pulse"
           >
             {currentTexts.memorizeButton}
           </button>

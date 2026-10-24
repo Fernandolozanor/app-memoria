@@ -621,7 +621,7 @@ export function FacesAndNames({ onComplete, onExit }: Props) {
               {isCardFlipped ? (
                 <button
                   onClick={handleStartGuessing}
-                  className="w-full py-3 sm:py-5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl sm:rounded-3xl font-black text-lg sm:text-2xl shadow-md border-2 sm:border-3 border-emerald-700 transition-all active:scale-95 cursor-pointer min-h-[52px] sm:min-h-[68px] animate-in fade-in zoom-in-95 duration-200 flex items-center justify-center gap-2"
+                  className="w-full py-3 sm:py-5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl sm:rounded-3xl font-black text-lg sm:text-2xl shadow-md border-2 sm:border-3 border-emerald-700 transition-all active:scale-95 cursor-pointer min-h-[52px] sm:min-h-[68px] animate-in fade-in zoom-in-95 duration-200 flex items-center justify-center gap-2 animate-start-pulse"
                 >
                   <Play className="w-5 h-5 sm:w-7 sm:h-7 fill-white" />
                   <span>¡Jugar! Adivinar su cara →</span>

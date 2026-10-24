@@ -1,4 +1,5 @@
 export type ActivityId =
+  // Primera tanda (1-10)
   | 'shopping-list'
   | 'memory-pairs'
   | 'sayings'
@@ -9,9 +10,21 @@ export type ActivityId =
   | 'step-order'
   | 'faces-and-names'
   | 'daily-coins'
+  // Segunda tanda (11-20)
+  | 'shell-game'
+  | 'wall-clock'
+  | 'popular-songs'
+  | 'pack-suitcase'
+  | 'home-phone'
+  | 'four-seasons'
+  | 'domino-match'
+  | 'spain-journey'
+  | 'syllable-words'
+  | 'tidy-home'
 
 export interface ActivityMeta {
   id: ActivityId
+  batch: 1 | 2
   title: string
   subtitle: string
   category: 'Memoria' | 'Atención' | 'Lenguaje' | 'Lógica y Día a Día'
@@ -23,7 +36,7 @@ export interface ActivityMeta {
 }
 
 export interface UserStats {
-  completedActivities: Record<ActivityId, number> // times played
+  completedActivities: Partial<Record<ActivityId, number>> // times played
   stars: number
   lastPlayedDate?: string
 }
