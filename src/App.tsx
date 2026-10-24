@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { ActivityId } from './types'
+import type { ActivityId, ActivityMeta } from './types'
 import { ACTIVITIES } from './data/activities'
 import { recordActivityCompletion } from './services/storage'
 import { resetMistakes } from './services/sessionStats'
@@ -32,16 +32,19 @@ import { SpainJourney } from './activities/SpainJourney'
 import { SyllableWords } from './activities/SyllableWords'
 import { TidyHome } from './activities/TidyHome'
 
+// Select 10 random distinct activities from the total available pool
+function pickRandomActivities(count = 10): ActivityMeta[] {
+  const shuffled = [...ACTIVITIES].sort(() => 0.5 - Math.random())
+  return shuffled.slice(0, count)
+}
+
 export function App() {
   const params = new URLSearchParams(window.location.search)
   const initialActivity = (params.get('activity') as ActivityId) || null
-  const initialBatch = params.get('tanda') === '2' ? 2 : 1
   const [currentActivity, setCurrentActivity] = useState<ActivityId | null>(initialActivity)
-  const [activeBatch, setActiveBatch] = useState<1 | 2>(initialBatch)
+  const [dailyActivities] = useState<ActivityMeta[]>(() => pickRandomActivities(10))
 
   const handleSelectActivity = (id: ActivityId) => {
-    const found = ACTIVITIES.find((a) => a.id === id)
-    if (found) setActiveBatch(found.batch)
     resetMistakes()
     setCurrentActivity(id)
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -59,7 +62,6 @@ export function App() {
   }
 
   const activeActivityMeta = ACTIVITIES.find((a) => a.id === currentActivity)
-  const visibleActivities = ACTIVITIES.filter((a) => a.batch === activeBatch)
 
   return (
     <div className="h-[100dvh] flex flex-col bg-[#FDFBF7] text-stone-900 overflow-hidden select-none">
@@ -75,45 +77,16 @@ export function App() {
         {!currentActivity ? (
           /* Catalog View - Super Clean, 100% full screen on mobile without scroll */
           <div className="flex-1 flex flex-col min-h-0 gap-2 sm:gap-3 overflow-hidden">
-            {/* Direct Greeting Banner + Tanda Selector */}
-            <div className="bg-gradient-to-r from-amber-100 via-orange-50 to-emerald-50 rounded-xl sm:rounded-3xl py-1.5 px-2.5 sm:p-3.5 border-2 sm:border-3 border-amber-300 shadow-xs sm:shadow-md flex flex-wrap items-center justify-between gap-2 shrink-0">
-              <h2 className="text-lg sm:text-3xl font-black text-stone-950 leading-tight px-1">
+            {/* Direct Greeting Banner */}
+            <div className="bg-gradient-to-r from-amber-100 via-orange-50 to-emerald-50 rounded-xl sm:rounded-3xl py-2 px-3 sm:p-4 border-2 sm:border-3 border-amber-300 shadow-xs sm:shadow-md flex items-center justify-center text-center shrink-0">
+              <h2 className="text-lg sm:text-3xl md:text-4xl font-black text-stone-950 leading-tight">
                 ¿A qué jugamos hoy? 🌸
               </h2>
-
-              <div className="flex items-center gap-1.5 sm:gap-2.5 ml-auto">
-                <button
-                  onClick={() => {
-                    sound.playTap()
-                    setActiveBatch(1)
-                  }}
-                  className={`px-3 sm:px-5 py-1 sm:py-2 rounded-xl sm:rounded-2xl font-black text-sm sm:text-xl border-2 sm:border-3 cursor-pointer transition-all active:scale-95 ${
-                    activeBatch === 1
-                      ? 'bg-amber-500 border-amber-700 text-white shadow-sm'
-                      : 'bg-white hover:bg-amber-50 border-amber-300 text-stone-800'
-                  }`}
-                >
-                  ⭐ 1ª Tanda
-                </button>
-                <button
-                  onClick={() => {
-                    sound.playTap()
-                    setActiveBatch(2)
-                  }}
-                  className={`px-3 sm:px-5 py-1 sm:py-2 rounded-xl sm:rounded-2xl font-black text-sm sm:text-xl border-2 sm:border-3 cursor-pointer transition-all active:scale-95 ${
-                    activeBatch === 2
-                      ? 'bg-emerald-600 border-emerald-800 text-white shadow-sm'
-                      : 'bg-white hover:bg-emerald-50 border-emerald-300 text-stone-800'
-                  }`}
-                >
-                  🌟 2ª Tanda
-                </button>
-              </div>
             </div>
 
-            {/* Activities Grid - 2 columns, 5 rows, fills available screen space */}
+            {/* Activities Grid - 2 columns, 5 rows, fills available screen space with 10 random games */}
             <div className="grid grid-cols-2 grid-rows-5 gap-2 sm:gap-3.5 flex-1 min-h-0 w-full">
-              {visibleActivities.map((activity) => (
+              {dailyActivities.map((activity) => (
                 <ActivityCard
                   key={activity.id}
                   activity={activity}
